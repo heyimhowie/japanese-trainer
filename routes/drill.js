@@ -1,0 +1,297 @@
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const { getDb } = require('../db/index');
+const { generateDrill, gradeResponse, chatFollowUp } = require('../lib/claude');
+
+const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Load life context once
+const lifeContext = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'data', 'life_context.json'), 'utf8')
+);
+
+// Helper: pick N random items from array
+function sample(arr, n) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+// Helper: get today's date string
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// GET /api/drill/domains — list available life domains
+router.get('/domains', (req, res) => {
+  const domains = Object.entries(lifeContext.life_domains).map(([key, val]) => ({
+    key,
+    topics: val.topics,
+    scenarios: val.scenarios,
+  }));
+  res.json(domains);
+});
+
+// POST /api/drill/generate — generate a new drill sentence
+router.post('/generate', async (req, res) => {
+  try {
+    const { tier = 1, level = 'blue', domain: requestedDomain } = req.body;
+    const db = getDb();
+
+    // Pick domain and scenario
+    const domainKeys = Object.keys(lifeContext.life_domains);
+    const domainKey = requestedDomain || domainKeys[Math.floor(Math.random() * domainKeys.length)];
+    const domainData = lifeContext.life_domains[domainKey];
+    const scenario = domainData.scenarios[Math.floor(Math.random() * domainData.scenarios.length)];
+
+    // Select vocabulary based on level and tier
+    let vocabQuery;
+    if (level === 'white') {
+      vocabQuery = `SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 30`;
+    } else if (tier === 1) {
+      vocabQuery = `SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 50`;
+    } else if (tier === 2) {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 35)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+        )`;
+    } else {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 25)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'weak' ORDER BY RANDOM() LIMIT 10)
+        )`;
+    }
+    const vocabulary = db.prepare(vocabQuery).all();
+
+    // Bias toward never-attempted vocab
+    const neverAttempted = db.prepare(
+      `SELECT vid, spelling, reading FROM vocabulary_status
+       WHERE jpdb_tier IN ('strong', 'moderate') AND production_status = 'never_attempted'
+       ORDER BY RANDOM() LIMIT 10`
+    ).all();
+    // Merge without duplicates
+    const vocabMap = new Map(vocabulary.map(v => [v.vid, v]));
+    for (const v of neverAttempted) vocabMap.set(v.vid, v);
+    const finalVocab = [...vocabMap.values()];
+
+    // Select grammar based on level and tier
+    let grammarLevels;
+    let grammarLimit;
+    if (level === 'white') {
+      grammarLevels = ['master', 'expert'];
+      grammarLimit = 1;
+    } else if (tier === 1) {
+      grammarLevels = ['master', 'expert'];
+      grammarLimit = 6;
+    } else if (tier === 2) {
+      grammarLevels = ['master', 'expert', 'seasoned'];
+      grammarLimit = 6;
+    } else {
+      grammarLevels = ['master', 'expert', 'seasoned', 'adept'];
+      grammarLimit = 6;
+    }
+    const placeholders = grammarLevels.map(() => '?').join(',');
+    const grammar = db.prepare(
+      `SELECT id, grammar_point, pattern_name, bunpro_level
+       FROM grammar_status
+       WHERE bunpro_level IN (${placeholders})
+       ORDER BY RANDOM() LIMIT ?`
+    ).all(...grammarLevels, grammarLimit);
+
+    // Call Claude to generate the drill
+    const drill = await generateDrill({
+      tier,
+      level,
+      domain: domainKey,
+      scenario,
+      vocabulary: finalVocab,
+      grammar,
+    });
+
+    res.json({
+      english: drill.english,
+      target_japanese: drill.target_japanese,
+      hints: drill.hints,
+      vocabulary_used: drill.vocabulary_used,
+      grammar_used: drill.grammar_used,
+      domain: domainKey,
+      tier,
+      level,
+    });
+  } catch (err) {
+    console.error('Drill generation error:', err);
+    res.status(500).json({ error: 'Failed to generate drill', detail: err.message });
+  }
+});
+
+// POST /api/drill/submit — grade user's response
+router.post('/submit', async (req, res) => {
+  try {
+    const {
+      english_prompt,
+      target_japanese,
+      user_response,
+      mode = 'typed',
+      domain,
+      tier = 1,
+      response_time_seconds,
+      vocabulary_used,
+      grammar_used,
+      hints,
+    } = req.body;
+
+    if (!user_response || !user_response.trim()) {
+      return res.status(400).json({ error: 'No response provided' });
+    }
+
+    const db = getDb();
+
+    // Call Claude to grade — pass the hints so grader knows what was suggested
+    const result = await gradeResponse({
+      englishPrompt: english_prompt,
+      targetJapanese: target_japanese,
+      userResponse: user_response,
+      hints,
+    });
+
+    // Save drill result
+    const insertResult = db.prepare(`
+      INSERT INTO drill_results
+        (mode, english_prompt, target_japanese, user_response, is_correct,
+         vocabulary_used, grammar_used, errors, life_domain, difficulty_tier, response_time_seconds)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      mode,
+      english_prompt,
+      result.target_japanese || target_japanese,
+      user_response,
+      result.is_correct ? 1 : 0,
+      JSON.stringify(vocabulary_used || []),
+      JSON.stringify(grammar_used || []),
+      JSON.stringify(result.errors || []),
+      domain,
+      tier,
+      response_time_seconds || null
+    );
+
+    result.drillResultId = Number(insertResult.lastInsertRowid);
+
+    // Update daily stats
+    const dateStr = today();
+    db.prepare(`
+      INSERT INTO daily_stats (date, drills_completed, drills_correct, voice_drills, typed_drills, streak_day)
+      VALUES (?, 1, ?, ?, ?, TRUE)
+      ON CONFLICT(date) DO UPDATE SET
+        drills_completed = drills_completed + 1,
+        drills_correct = drills_correct + EXCLUDED.drills_correct,
+        voice_drills = voice_drills + EXCLUDED.voice_drills,
+        typed_drills = typed_drills + EXCLUDED.typed_drills,
+        accuracy_rate = CAST(drills_correct + EXCLUDED.drills_correct AS REAL) / (drills_completed + 1),
+        streak_day = TRUE
+    `).run(
+      dateStr,
+      result.is_correct ? 1 : 0,
+      mode === 'voice' ? 1 : 0,
+      mode === 'typed' ? 1 : 0
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error('Drill grading error:', err);
+    res.status(500).json({ error: 'Failed to grade response', detail: err.message });
+  }
+});
+
+// POST /api/drill/chat — follow-up Q&A about a drill
+router.post('/chat', async (req, res) => {
+  try {
+    const { drillContext, conversationHistory = [], question, drillResultId } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: 'No question provided' });
+    }
+
+    const answer = await chatFollowUp({
+      drillContext,
+      conversationHistory,
+      question: question.trim(),
+    });
+
+    // Update the drill_results record with the Q&A so far
+    if (drillResultId) {
+      const db = getDb();
+      const updatedQA = [...conversationHistory, { role: 'user', content: question.trim() }, { role: 'assistant', content: answer }];
+      db.prepare('UPDATE drill_results SET follow_up_qa = ? WHERE id = ?')
+        .run(JSON.stringify(updatedQA), drillResultId);
+    }
+
+    res.json({ answer });
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Failed to get answer', detail: err.message });
+  }
+});
+
+// POST /api/drill/transcribe — voice input via Whisper
+router.post('/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    const OpenAI = require('openai');
+    const openai = new OpenAI();
+
+    // Whisper needs a file-like object with a name
+    const file = new File([req.file.buffer], 'audio.webm', { type: req.file.mimetype });
+
+    const transcription = await openai.audio.transcriptions.create({
+      model: 'whisper-1',
+      file,
+      language: 'ja',
+    });
+
+    res.json({ text: transcription.text });
+  } catch (err) {
+    console.error('Transcription error:', err);
+    res.status(500).json({ error: 'Failed to transcribe audio', detail: err.message });
+  }
+});
+
+// POST /api/drill/tts — text-to-speech via OpenAI
+router.post('/tts', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ error: 'No text provided' });
+
+    const OpenAI = require('openai');
+    const openai = new OpenAI();
+
+    const audio = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: 'nova',
+      input: text,
+      speed: 1.0,
+    });
+
+    const buffer = Buffer.from(await audio.arrayBuffer());
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': buffer.length,
+    });
+    res.send(buffer);
+  } catch (err) {
+    console.error('TTS error:', err);
+    res.status(500).json({ error: 'Failed to generate speech', detail: err.message });
+  }
+});
+
+module.exports = router;

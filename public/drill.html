@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentence Builder - Japanese Trainer</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <span class="logo">Japanese Trainer</span>
+    <div class="nav-links">
+      <a href="/">Dashboard</a>
+      <a href="/drill.html" class="active">Drill</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Controls -->
+    <div class="controls-row">
+      <div class="level-btn-group">
+        <button data-level="white" class="level-btn white">White</button>
+        <button data-level="blue" class="level-btn blue active">Blue</button>
+      </div>
+      <div class="tier-btn-group" id="tier-group">
+        <button data-tier="1" class="active">Tier 1</button>
+        <button data-tier="2">Tier 2</button>
+        <button data-tier="3">Tier 3</button>
+      </div>
+      <select id="domain-select">
+        <option value="">Random Domain</option>
+      </select>
+    </div>
+
+    <!-- Prompt -->
+    <div id="prompt-area">
+      <div class="prompt-card" id="prompt-card" style="display: none;">
+        <div class="domain-tag" id="prompt-domain"></div>
+        <div class="english" id="prompt-english"></div>
+        <button class="btn-hint" id="btn-hint" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'; this.textContent = this.nextElementSibling.style.display === 'block' ? 'Hide Hint' : 'Show Hint'">Show Hint</button>
+        <div class="hints" id="prompt-hints" style="display: none;"></div>
+      </div>
+
+      <div id="generate-area" style="text-align: center; padding: 40px 0;">
+        <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
+          Generate Drill
+        </button>
+      </div>
+
+      <div class="loading" id="loading-generate" style="display: none;">
+        <div class="spinner"></div>
+        <div>Generating sentence...</div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div id="input-area" style="display: none;">
+      <div class="input-area">
+        <textarea
+          id="user-input"
+          placeholder="Type your Japanese here..."
+          rows="2"
+          lang="ja"
+        ></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-voice" id="btn-voice" title="Hold to record">
+          <span id="mic-icon">&#x1F3A4;</span>
+        </button>
+        <button class="btn btn-primary" id="btn-submit" disabled>
+          Submit
+        </button>
+      </div>
+
+      <div id="voice-status" style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px; display: none;"></div>
+    </div>
+
+    <!-- Grading loading -->
+    <div class="loading" id="loading-grade" style="display: none;">
+      <div class="spinner"></div>
+      <div>Grading response...</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="result-card">
+      <div class="result-header" id="result-header"></div>
+
+      <div class="score-breakdown" id="score-breakdown">
+        <div class="score-item">
+          <div class="score-value" id="score-grammar">--</div>
+          <div class="score-label">Grammar</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value" id="score-meaning">--</div>
+          <div class="score-label">Meaning</div>
+        </div>
+        <div class="score-item">
+          <div class="score-value" id="score-naturalness">--</div>
+          <div class="score-label">Naturalness</div>
+        </div>
+      </div>
+
+      <div class="target">
+        <div class="label">Your response</div>
+        <div class="jp-text" id="result-user-response"></div>
+      </div>
+
+      <div class="target">
+        <div class="label">Reference translation</div>
+        <div class="jp-text" id="result-target"></div>
+        <button class="btn-tts" id="btn-tts" title="Listen to target sentence">
+          &#x1F50A; Listen
+        </button>
+      </div>
+
+      <div id="result-corrections" class="corrections" style="display: none;"></div>
+
+      <div class="explanation" id="result-explanation"></div>
+
+      <ul class="errors-list" id="result-errors"></ul>
+
+      <div style="margin-top: 16px; text-align: center;">
+        <button class="btn btn-primary" id="btn-next" style="max-width: 250px; width: 100%;">
+          Next Drill
+        </button>
+      </div>
+    </div>
+
+    <!-- Follow-up Chat -->
+    <div id="chat-area" style="display: none;">
+      <div class="card chat-card">
+        <h2>Ask about this drill</h2>
+        <div id="chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="Why is X wrong? / Can I also say...?" />
+          <button class="btn btn-primary" id="btn-chat-send" disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/drill.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Japanese Trainer</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <span class="logo">Japanese Trainer</span>
+    <div class="nav-links">
+      <a href="/" class="active">Dashboard</a>
+      <a href="/drill.html">Drill</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="stat-grid" id="stats-grid">
+      <div class="stat-box">
+        <div class="value" id="streak">--</div>
+        <div class="label">Day Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="value" id="today-drills">--</div>
+        <div class="label">Today's Drills</div>
+      </div>
+      <div class="stat-box">
+        <div class="value" id="today-accuracy">--</div>
+        <div class="label">Today's Accuracy</div>
+      </div>
+      <div class="stat-box">
+        <div class="value" id="total-drills">--</div>
+        <div class="label">All-time Drills</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Vocabulary</h2>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="value" id="vocab-strong">--</div>
+          <div class="label">Strong</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="vocab-moderate">--</div>
+          <div class="label">Moderate</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="vocab-weak">--</div>
+          <div class="label">Weak</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="vocab-produced">--</div>
+          <div class="label">Produced</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Grammar</h2>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="value" id="grammar-total">--</div>
+          <div class="label">Total Points</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="grammar-reliable">--</div>
+          <div class="label">Reliable</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Weakest Grammar Patterns</h2>
+      <ul class="weakness-list" id="weakness-list">
+        <li><span class="text-muted">Loading...</span></li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; padding: 20px;">
+      <a href="/drill.html" class="btn btn-primary" style="display: inline-flex; text-decoration: none; max-width: 300px;">
+        Start Drilling
+      </a>
+    </div>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

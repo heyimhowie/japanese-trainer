@@ -1,0 +1,87 @@
+{
+  "user": "Howie",
+  "life_domains": {
+    "family": {
+      "topics": ["husband and dad", "daily family routines", "kids activities", "taking kids to BJJ, Judo, basketball"],
+      "scenarios": [
+        "Describing your weekend with the family",
+        "Talking about what your kids are into",
+        "Explaining your daily routine as a parent",
+        "Telling someone about your dog Kodak (goldendoodle)"
+      ]
+    },
+    "coaching": {
+      "topics": ["U8 girls basketball", "principles-based coaching", "practice planning", "teaching fundamentals"],
+      "scenarios": [
+        "Explaining what you coach and your philosophy",
+        "Describing a recent practice",
+        "Talking about why you don't use set plays for young kids",
+        "Explaining a drill or activity you ran"
+      ]
+    },
+    "work": {
+      "topics": ["IT project manager", "enterprise technology", "SAP S/4HANA", "Fluor Corporation"],
+      "scenarios": [
+        "Describing your job to someone",
+        "Talking about a project you're working on",
+        "Explaining what your company does",
+        "Describing a typical work day"
+      ]
+    },
+    "japanese_learning": {
+      "topics": ["3 years studying", "anime", "light novels", "JPDB", "speaking practice"],
+      "scenarios": [
+        "Explaining why you started learning Japanese",
+        "Describing how you study",
+        "Talking about your favorite anime or manga",
+        "Discussing your goals with Japanese"
+      ]
+    },
+    "technology_ai": {
+      "topics": ["learning about AI", "Claude Code", "building apps", "Bitcoin", "investing"],
+      "scenarios": [
+        "Explaining AI to someone simply",
+        "Talking about a project you built",
+        "Discussing Bitcoin or investing interests",
+        "Describing how you use AI tools"
+      ]
+    },
+    "health_fitness": {
+      "topics": ["working out", "eating healthy", "fitness routine"],
+      "scenarios": [
+        "Describing your workout routine",
+        "Talking about what you eat",
+        "Explaining your health goals",
+        "Discussing a recent workout"
+      ]
+    },
+    "photography": {
+      "topics": ["photography", "film photography", "camera gear", "digital vs film"],
+      "scenarios": [
+        "Explaining your photography hobby",
+        "Talking about your camera gear",
+        "Describing why you like film photography",
+        "Discussing a recent photo you took"
+      ]
+    },
+    "travel": {
+      "topics": ["traveling", "places visited", "trip planning", "Japan travel"],
+      "scenarios": [
+        "Talking about a trip you took",
+        "Planning a trip to Japan",
+        "Describing your favorite travel destination",
+        "Asking for recommendations in a new city"
+      ]
+    },
+    "food_and_coffee": {
+      "topics": ["coffee", "going out to eat", "restaurants", "trying new food", "eating healthy"],
+      "scenarios": [
+        "Ordering coffee at a cafe",
+        "Recommending a restaurant to a friend",
+        "Describing your favorite food or cuisine",
+        "Talking about a restaurant you went to recently",
+        "Explaining what kind of coffee you like"
+      ]
+    }
+  }
+}
