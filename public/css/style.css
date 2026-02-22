@@ -587,6 +587,130 @@ ruby rt {
   font-size: 0.9em;
 }
 
+/* Free Production — prompt actions */
+.prompt-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.btn-tts-prompt {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-tts-prompt:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.btn-translation-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 0.9em;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-translation-toggle:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.btn-translation-toggle.active {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--accent);
+}
+.translation {
+  margin-top: 12px;
+  font-size: 0.95em;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Free Production — result sections */
+.what-was-good {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--success-bg);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-sm);
+  font-size: 0.95em;
+  line-height: 1.5;
+}
+.alternatives {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+.alternatives .label,
+.vocab-opps .label {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.alternatives ul,
+.vocab-opps ul {
+  list-style: none;
+  padding: 0;
+}
+.alternatives ul li {
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 1.1em;
+  line-height: 2;
+}
+.alternatives ul li:last-child {
+  border-bottom: none;
+}
+.vocab-opps {
+  margin-top: 12px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+.vocab-opps ul li {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.95em;
+  line-height: 1.6;
+}
+.vocab-opps ul li:last-child {
+  border-bottom: none;
+}
+.vocab-example {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* CTA buttons on dashboard */
+.cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 20px 0;
+}
+.cta-row a {
+  display: inline-flex;
+  text-decoration: none;
+  max-width: 240px;
+  width: 100%;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .container {

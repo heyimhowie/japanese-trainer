@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Targeted Drills - Japanese Trainer</title>
+  <title>Free Production - Japanese Trainer</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,46 +11,33 @@
     <span class="logo">Japanese Trainer</span>
     <div class="nav-links">
       <a href="/">Dashboard</a>
-      <a href="/free.html">Free Production</a>
-      <a href="/drill.html" class="active">Targeted Drills</a>
+      <a href="/free.html" class="active">Free Production</a>
+      <a href="/drill.html">Targeted Drills</a>
     </div>
   </nav>
 
   <div class="container">
-    <!-- Controls -->
-    <div class="controls-row">
-      <div class="level-btn-group">
-        <button data-level="white" class="level-btn white">White</button>
-        <button data-level="blue" class="level-btn blue active">Blue</button>
-      </div>
-      <div class="tier-btn-group" id="tier-group">
-        <button data-tier="1" class="active">Tier 1</button>
-        <button data-tier="2">Tier 2</button>
-        <button data-tier="3">Tier 3</button>
-      </div>
-      <select id="domain-select">
-        <option value="">Random Domain</option>
-      </select>
-    </div>
-
     <!-- Prompt -->
     <div id="prompt-area">
       <div class="prompt-card" id="prompt-card" style="display: none;">
         <div class="domain-tag" id="prompt-domain"></div>
-        <div class="english" id="prompt-english"></div>
-        <button class="btn-hint" id="btn-hint" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'; this.textContent = this.nextElementSibling.style.display === 'block' ? 'Hide Hint' : 'Show Hint'">Show Hint</button>
-        <div class="hints" id="prompt-hints" style="display: none;"></div>
+        <div class="jp-text-large" id="prompt-japanese"></div>
+        <div class="prompt-actions">
+          <button class="btn-tts-prompt" id="btn-tts-prompt" title="Listen to prompt">&#x1F50A;</button>
+          <button class="btn-translation-toggle" id="btn-translation-toggle">訳</button>
+        </div>
+        <div class="translation" id="prompt-translation" style="display: none;"></div>
       </div>
 
       <div id="generate-area" style="text-align: center; padding: 40px 0;">
         <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
-          Generate Drill
+          Start Free Production
         </button>
       </div>
 
       <div class="loading" id="loading-generate" style="display: none;">
         <div class="spinner"></div>
-        <div>Generating sentence...</div>
+        <div>Generating prompt...</div>
       </div>
     </div>
 
@@ -59,7 +46,7 @@
       <div class="input-area">
         <textarea
           id="user-input"
-          placeholder="Type your Japanese here..."
+          placeholder="日本語で答えてください..."
           rows="2"
           lang="ja"
         ></textarea>
@@ -94,7 +81,7 @@
         </div>
         <div class="score-item">
           <div class="score-value" id="score-meaning">--</div>
-          <div class="score-label">Meaning</div>
+          <div class="score-label">Completeness</div>
         </div>
         <div class="score-item">
           <div class="score-value" id="score-naturalness">--</div>
@@ -107,13 +94,7 @@
         <div class="jp-text" id="result-user-response"></div>
       </div>
 
-      <div class="target">
-        <div class="label">Reference translation</div>
-        <div class="jp-text" id="result-target"></div>
-        <button class="btn-tts" id="btn-tts" title="Listen to target sentence">
-          &#x1F50A; Listen
-        </button>
-      </div>
+      <div id="result-good" class="what-was-good" style="display: none;"></div>
 
       <div id="result-corrections" class="corrections" style="display: none;"></div>
 
@@ -121,9 +102,19 @@
 
       <ul class="errors-list" id="result-errors"></ul>
 
+      <div id="result-alternatives" class="alternatives" style="display: none;">
+        <div class="label">Alternative expressions</div>
+        <ul id="alternatives-list"></ul>
+      </div>
+
+      <div id="result-vocab-opps" class="vocab-opps" style="display: none;">
+        <div class="label">Vocabulary you could have used</div>
+        <ul id="vocab-opps-list"></ul>
+      </div>
+
       <div style="margin-top: 16px; text-align: center;">
         <button class="btn btn-primary" id="btn-next" style="max-width: 250px; width: 100%;">
-          Next Drill
+          Next Prompt
         </button>
       </div>
     </div>
@@ -142,6 +133,6 @@
   </div>
 
   <script src="/js/shared.js"></script>
-  <script src="/js/drill.js"></script>
+  <script src="/js/free.js"></script>
 </body>
 </html>

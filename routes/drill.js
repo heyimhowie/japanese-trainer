@@ -3,7 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { getDb } = require('../db/index');
-const { generateDrill, gradeResponse, chatFollowUp } = require('../lib/claude');
+const { generateDrill, gradeResponse, chatFollowUp, generateFreeDrill, gradeFreeDrillResponse } = require('../lib/claude');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -206,6 +206,171 @@ router.post('/submit', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('Drill grading error:', err);
+    res.status(500).json({ error: 'Failed to grade response', detail: err.message });
+  }
+});
+
+// POST /api/drill/generate-free — generate a free production prompt
+router.post('/generate-free', async (req, res) => {
+  try {
+    const { difficulty = 1, domain: requestedDomain } = req.body;
+    const db = getDb();
+
+    // Pick domain and scenario
+    const domainKeys = Object.keys(lifeContext.life_domains);
+    const domainKey = requestedDomain || domainKeys[Math.floor(Math.random() * domainKeys.length)];
+    const domainData = lifeContext.life_domains[domainKey];
+    const scenario = domainData.scenarios[Math.floor(Math.random() * domainData.scenarios.length)];
+
+    // Select vocabulary from ALL tiers, weighted by difficulty
+    let vocabQuery;
+    if (difficulty <= 2) {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 40)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 10)
+        )`;
+    } else if (difficulty <= 4) {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 25)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'weak' ORDER BY RANDOM() LIMIT 10)
+        )`;
+    } else {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'weak' ORDER BY RANDOM() LIMIT 20)
+        )`;
+    }
+    const vocabulary = db.prepare(vocabQuery).all();
+
+    // Select grammar from ALL levels, weighted by difficulty
+    let grammarLevels;
+    let grammarLimit;
+    if (difficulty <= 2) {
+      grammarLevels = ['master', 'expert', 'seasoned'];
+      grammarLimit = 8;
+    } else if (difficulty <= 4) {
+      grammarLevels = ['master', 'expert', 'seasoned', 'adept'];
+      grammarLimit = 8;
+    } else {
+      grammarLevels = ['master', 'expert', 'seasoned', 'adept', 'beginner'];
+      grammarLimit = 10;
+    }
+    const placeholders = grammarLevels.map(() => '?').join(',');
+    const grammar = db.prepare(
+      `SELECT id, grammar_point, pattern_name, bunpro_level
+       FROM grammar_status
+       WHERE bunpro_level IN (${placeholders})
+       ORDER BY RANDOM() LIMIT ?`
+    ).all(...grammarLevels, grammarLimit);
+
+    const drill = await generateFreeDrill({
+      difficulty,
+      domain: domainKey,
+      scenario,
+      vocabulary,
+      grammar,
+    });
+
+    res.json({
+      japanese_prompt: drill.japanese_prompt,
+      translation: drill.translation,
+      prompt_vocabulary: drill.prompt_vocabulary,
+      target_vocabulary: drill.target_vocabulary,
+      prompt_grammar: drill.prompt_grammar,
+      target_grammar: drill.target_grammar,
+      key_info_points: drill.key_info_points,
+      domain: domainKey,
+      difficulty,
+    });
+  } catch (err) {
+    console.error('Free drill generation error:', err);
+    res.status(500).json({ error: 'Failed to generate free drill', detail: err.message });
+  }
+});
+
+// POST /api/drill/submit-free — grade a free production response
+router.post('/submit-free', async (req, res) => {
+  try {
+    const {
+      japanese_prompt,
+      user_response,
+      key_info_points,
+      target_vocabulary,
+      target_grammar,
+      mode = 'typed',
+      domain,
+      difficulty = 1,
+      response_time_seconds,
+    } = req.body;
+
+    if (!user_response || !user_response.trim()) {
+      return res.status(400).json({ error: 'No response provided' });
+    }
+
+    const db = getDb();
+
+    const result = await gradeFreeDrillResponse({
+      japanesePrompt: japanese_prompt,
+      userResponse: user_response,
+      keyInfoPoints: key_info_points || [],
+      targetVocabulary: target_vocabulary,
+      targetGrammar: target_grammar,
+    });
+
+    // Save drill result
+    const insertResult = db.prepare(`
+      INSERT INTO drill_results
+        (mode, japanese_prompt, user_response, is_correct,
+         vocabulary_used, grammar_used, errors, life_domain,
+         difficulty_tier, response_time_seconds, drill_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'free_production')
+    `).run(
+      mode,
+      japanese_prompt,
+      user_response,
+      result.is_correct ? 1 : 0,
+      JSON.stringify(target_vocabulary || []),
+      JSON.stringify(target_grammar || []),
+      JSON.stringify(result.errors || []),
+      domain,
+      difficulty,
+      response_time_seconds || null
+    );
+
+    result.drillResultId = Number(insertResult.lastInsertRowid);
+
+    // Update daily stats
+    const dateStr = today();
+    db.prepare(`
+      INSERT INTO daily_stats (date, drills_completed, drills_correct, voice_drills, typed_drills, streak_day)
+      VALUES (?, 1, ?, ?, ?, TRUE)
+      ON CONFLICT(date) DO UPDATE SET
+        drills_completed = drills_completed + 1,
+        drills_correct = drills_correct + EXCLUDED.drills_correct,
+        voice_drills = voice_drills + EXCLUDED.voice_drills,
+        typed_drills = typed_drills + EXCLUDED.typed_drills,
+        accuracy_rate = CAST(drills_correct + EXCLUDED.drills_correct AS REAL) / (drills_completed + 1),
+        streak_day = TRUE
+    `).run(
+      dateStr,
+      result.is_correct ? 1 : 0,
+      mode === 'voice' ? 1 : 0,
+      mode === 'typed' ? 1 : 0
+    );
+
+    res.json(result);
+  } catch (err) {
+    console.error('Free drill grading error:', err);
     res.status(500).json({ error: 'Failed to grade response', detail: err.message });
   }
 });

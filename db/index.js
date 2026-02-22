@@ -97,10 +97,17 @@ function initSchema() {
 }
 
 function runMigrations() {
-  // Add follow_up_qa column if missing (for existing databases)
   const cols = db.prepare("PRAGMA table_info(drill_results)").all();
-  if (!cols.find(c => c.name === 'follow_up_qa')) {
+  const has = name => cols.some(c => c.name === name);
+
+  if (!has('follow_up_qa')) {
     db.exec('ALTER TABLE drill_results ADD COLUMN follow_up_qa TEXT');
+  }
+  if (!has('japanese_prompt')) {
+    db.exec('ALTER TABLE drill_results ADD COLUMN japanese_prompt TEXT');
+  }
+  if (!has('drill_type')) {
+    db.exec("ALTER TABLE drill_results ADD COLUMN drill_type TEXT DEFAULT 'targeted'");
   }
 }
 

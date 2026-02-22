@@ -94,9 +94,27 @@ router.get('/dashboard', (req, res) => {
       'SELECT COUNT(*) as count FROM drill_results'
     ).get();
 
+    // Free production stats today
+    const freeToday = db.prepare(
+      `SELECT COUNT(*) as completed,
+              SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as correct
+       FROM drill_results
+       WHERE drill_type = 'free_production' AND date(timestamp) = ?`
+    ).get(today()) || { completed: 0, correct: 0 };
+
+    // Targeted drill stats today
+    const targetedToday = db.prepare(
+      `SELECT COUNT(*) as completed,
+              SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as correct
+       FROM drill_results
+       WHERE (drill_type = 'targeted' OR drill_type IS NULL) AND date(timestamp) = ?`
+    ).get(today()) || { completed: 0, correct: 0 };
+
     res.json({
       streak,
       today: todayStats,
+      free_today: freeToday,
+      targeted_today: targetedToday,
       vocabulary: { ...vocabCounts, tiers: tierCounts },
       grammar: grammarCounts,
       weakest_patterns: weakestPatterns,

@@ -2,15 +2,10 @@
 let currentTier = 1;
 let currentLevel = 'blue';
 let currentDomain = '';
-let currentDrill = null; // holds the generated drill data
+let currentDrill = null;
 let drillStartTime = null;
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
-let ttsAudio = null; // currently playing TTS audio
-let chatHistory = []; // follow-up Q&A conversation
-let drillResultId = null; // DB id for saving Q&A
-let lastGradeResult = null; // grading result for chat context
+let drillResultId = null;
+let lastGradeResult = null;
 
 // --- DOM refs ---
 const levelBtns = document.querySelectorAll('.level-btn');
@@ -40,26 +35,6 @@ const resultErrors = document.getElementById('result-errors');
 const btnTts = document.getElementById('btn-tts');
 const btnNext = document.getElementById('btn-next');
 const chatArea = document.getElementById('chat-area');
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.getElementById('chat-input');
-const btnChatSend = document.getElementById('btn-chat-send');
-
-// --- Furigana: convert 漢字(かんじ) to <ruby> tags ---
-function furiganaToRuby(text) {
-  if (!text) return '';
-  // Match kanji (possibly with okurigana between) followed by (reading)
-  // Handles both 練習(れんしゅう) and 楽(たの)しい and 撮る(とる)
-  return text.replace(
-    /([\u4E00-\u9FFF\u3005]+[\u3040-\u309F]*)[\(（]([\u3040-\u309Fー\u30A0-\u30FF]+)[\)）]/g,
-    '<ruby>$1<rp>(</rp><rt>$2</rt><rp>)</rp></ruby>'
-  );
-}
-
-// Strip furigana for TTS: 練習(れんしゅう) → 練習
-function stripFurigana(text) {
-  if (!text) return '';
-  return text.replace(/[\(（][\u3040-\u309F\u30A0-\u30FFー]+[\)）]/g, '');
-}
 
 // --- Init ---
 async function init() {
@@ -177,71 +152,34 @@ userInput.addEventListener('keydown', (e) => {
 });
 
 // --- Voice recording ---
-btnVoice.addEventListener('mousedown', startRecording);
-btnVoice.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
-btnVoice.addEventListener('mouseup', stopRecording);
-btnVoice.addEventListener('touchend', stopRecording);
-btnVoice.addEventListener('mouseleave', () => { if (isRecording) stopRecording(); });
-
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      if (audioChunks.length === 0) return;
-
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      await transcribe(blob);
-    };
-
-    mediaRecorder.start();
-    isRecording = true;
+const voice = initVoice({
+  onStart() {
     btnVoice.classList.add('recording');
     voiceStatus.textContent = 'Recording... release to stop';
     voiceStatus.style.display = 'block';
-  } catch (err) {
-    console.error('Recording error:', err);
+  },
+  onStop() {
+    btnVoice.classList.remove('recording');
+  },
+  onTranscribing() {
+    voiceStatus.textContent = 'Transcribing...';
+  },
+  onTranscribed(text) {
+    userInput.value = text;
+    btnSubmit.disabled = !text.trim();
+    voiceStatus.textContent = 'Transcribed via Whisper';
+  },
+  onError() {
     voiceStatus.textContent = 'Microphone access denied';
     voiceStatus.style.display = 'block';
-  }
-}
+  },
+});
 
-function stopRecording() {
-  if (!isRecording || !mediaRecorder) return;
-  mediaRecorder.stop();
-  isRecording = false;
-  btnVoice.classList.remove('recording');
-  voiceStatus.textContent = 'Transcribing...';
-}
-
-async function transcribe(blob) {
-  try {
-    const form = new FormData();
-    form.append('audio', blob, 'recording.webm');
-
-    const res = await fetch('/api/drill/transcribe', {
-      method: 'POST',
-      body: form,
-    });
-
-    if (!res.ok) throw new Error('Transcription failed');
-
-    const data = await res.json();
-    userInput.value = data.text;
-    btnSubmit.disabled = !data.text.trim();
-    voiceStatus.textContent = 'Transcribed via Whisper';
-  } catch (err) {
-    console.error('Transcription error:', err);
-    voiceStatus.textContent = 'Transcription failed — try typing instead';
-  }
-}
+btnVoice.addEventListener('mousedown', voice.start);
+btnVoice.addEventListener('touchstart', (e) => { e.preventDefault(); voice.start(); });
+btnVoice.addEventListener('mouseup', voice.stop);
+btnVoice.addEventListener('touchend', voice.stop);
+btnVoice.addEventListener('mouseleave', () => { if (voice.isRecording()) voice.stop(); });
 
 // --- Submit ---
 btnSubmit.addEventListener('click', submit);
@@ -341,45 +279,18 @@ function showResult(result) {
   lastGradeResult = result;
 
   // Show chat area and reset conversation
-  chatHistory = [];
-  chatMessages.innerHTML = '';
+  chat.reset();
   chatArea.style.display = 'block';
-  chatInput.value = '';
-  btnChatSend.disabled = true;
 }
 
 // --- TTS via OpenAI ---
 btnTts.addEventListener('click', async () => {
   const text = btnTts.dataset.text;
   if (!text) return;
-
-  // Stop any currently playing audio
-  if (ttsAudio) {
-    ttsAudio.pause();
-    ttsAudio = null;
-  }
-
   btnTts.disabled = true;
   btnTts.textContent = '... Loading';
-
   try {
-    const res = await fetch('/api/drill/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
-
-    if (!res.ok) throw new Error('TTS failed');
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    ttsAudio = new Audio(url);
-    ttsAudio.playbackRate = 0.85;
-    ttsAudio.onended = () => {
-      URL.revokeObjectURL(url);
-      ttsAudio = null;
-    };
-    await ttsAudio.play();
+    await playTts(text);
   } catch (err) {
     console.error('TTS error:', err);
   } finally {
@@ -388,117 +299,45 @@ btnTts.addEventListener('click', async () => {
   }
 });
 
+// --- Chat ---
+const chat = initChat({
+  messagesEl: document.getElementById('chat-messages'),
+  inputEl: document.getElementById('chat-input'),
+  sendBtn: document.getElementById('btn-chat-send'),
+  getContext() {
+    if (!currentDrill || !lastGradeResult) return null;
+    return {
+      drillContext: {
+        english_prompt: currentDrill.english,
+        user_response: userInput.value.trim(),
+        target_japanese: lastGradeResult.target_japanese || currentDrill.target_japanese,
+        score: lastGradeResult.score,
+        grammar_score: lastGradeResult.grammar_score,
+        meaning_score: lastGradeResult.meaning_score,
+        naturalness_score: lastGradeResult.naturalness_score,
+        errors: lastGradeResult.errors,
+        corrections: lastGradeResult.corrections,
+        explanation: lastGradeResult.explanation,
+        hints: currentDrill.hints,
+      },
+      drillResultId,
+    };
+  },
+});
+
 // --- Next drill ---
 btnNext.addEventListener('click', () => {
-  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  stopTts();
   resultCard.className = 'result-card';
   resultCard.style.display = 'none';
   voiceStatus.style.display = 'none';
   chatArea.style.display = 'none';
-  chatHistory = [];
-  chatMessages.innerHTML = '';
+  chat.reset();
   drillResultId = null;
   lastGradeResult = null;
   currentDrill = null;
   generate();
 });
-
-function setScore(elementId, value) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  if (value == null) { el.textContent = '--'; el.className = 'score-value'; return; }
-  el.textContent = value;
-  el.className = 'score-value ' + (value >= 80 ? 'high' : value >= 50 ? 'mid' : 'low');
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// --- Chat follow-up ---
-chatInput.addEventListener('input', () => {
-  btnChatSend.disabled = !chatInput.value.trim();
-});
-
-chatInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && chatInput.value.trim()) {
-    e.preventDefault();
-    sendChat();
-  }
-});
-
-btnChatSend.addEventListener('click', sendChat);
-
-async function sendChat() {
-  const question = chatInput.value.trim();
-  if (!question || !currentDrill || !lastGradeResult) return;
-
-  // Show user message
-  appendChatMessage('user', question);
-  chatInput.value = '';
-  btnChatSend.disabled = true;
-
-  // Show typing indicator
-  const typingEl = appendChatMessage('assistant', '...');
-  typingEl.classList.add('typing');
-
-  try {
-    const res = await fetch('/api/drill/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        drillContext: {
-          english_prompt: currentDrill.english,
-          user_response: userInput.value.trim(),
-          target_japanese: lastGradeResult.target_japanese || currentDrill.target_japanese,
-          score: lastGradeResult.score,
-          grammar_score: lastGradeResult.grammar_score,
-          meaning_score: lastGradeResult.meaning_score,
-          naturalness_score: lastGradeResult.naturalness_score,
-          errors: lastGradeResult.errors,
-          corrections: lastGradeResult.corrections,
-          explanation: lastGradeResult.explanation,
-          hints: currentDrill.hints,
-        },
-        conversationHistory: chatHistory,
-        question,
-        drillResultId,
-      }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      let detail;
-      try { detail = JSON.parse(text).detail || JSON.parse(text).error; } catch(_) { detail = text; }
-      throw new Error(detail || `Chat failed (${res.status})`);
-    }
-
-    const data = await res.json();
-
-    // Remove typing indicator and show real answer
-    typingEl.remove();
-    appendChatMessage('assistant', data.answer);
-
-    // Update history
-    chatHistory.push({ role: 'user', content: question });
-    chatHistory.push({ role: 'assistant', content: data.answer });
-  } catch (err) {
-    console.error('Chat error:', err);
-    typingEl.remove();
-    appendChatMessage('assistant', 'Error: ' + err.message);
-  }
-}
-
-function appendChatMessage(role, content) {
-  const div = document.createElement('div');
-  div.className = 'chat-msg ' + (role === 'user' ? 'chat-user' : 'chat-assistant');
-  div.innerHTML = furiganaToRuby(escapeHtml(content));
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  return div;
-}
 
 // --- Start ---
 init();

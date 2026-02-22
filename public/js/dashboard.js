@@ -4,13 +4,19 @@ async function loadDashboard() {
     const data = await res.json();
 
     document.getElementById('streak').textContent = data.streak;
-    document.getElementById('today-drills').textContent = data.today.drills_completed;
     document.getElementById('total-drills').textContent = data.total_drills;
 
-    const accuracy = data.today.drills_completed > 0
-      ? Math.round((data.today.drills_correct / data.today.drills_completed) * 100)
+    // Free production stats
+    const free = data.free_today || { completed: 0, correct: 0 };
+    document.getElementById('free-completed').textContent = free.completed || 0;
+    const freeAcc = free.completed > 0
+      ? Math.round((free.correct / free.completed) * 100)
       : 0;
-    document.getElementById('today-accuracy').textContent = accuracy + '%';
+    document.getElementById('free-accuracy').textContent = freeAcc + '%';
+
+    // Targeted drill stats
+    const targeted = data.targeted_today || { completed: 0, correct: 0 };
+    document.getElementById('targeted-completed').textContent = targeted.completed || 0;
 
     // Vocab tiers
     const tierMap = {};
