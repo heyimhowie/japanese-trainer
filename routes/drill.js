@@ -6,7 +6,10 @@ const { getDb } = require('../db/index');
 const { generateDrill, gradeResponse, chatFollowUp, generateFreeDrill, gradeFreeDrillResponse } = require('../lib/claude');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB cap
+});
 
 // Load life context once
 const lifeContext = JSON.parse(
@@ -38,6 +41,13 @@ router.get('/domains', (req, res) => {
 router.post('/generate', async (req, res) => {
   try {
     const { tier = 1, level = 'blue', domain: requestedDomain } = req.body;
+
+    // Validate inputs
+    const tierNum = Number(tier);
+    if (!Number.isInteger(tierNum) || tierNum < 1 || tierNum > 3) {
+      return res.status(400).json({ error: 'Invalid tier (must be 1-3)' });
+    }
+
     const db = getDb();
 
     // Pick domain and scenario
@@ -50,9 +60,9 @@ router.post('/generate', async (req, res) => {
     let vocabQuery;
     if (level === 'white') {
       vocabQuery = `SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 30`;
-    } else if (tier === 1) {
+    } else if (tierNum === 1) {
       vocabQuery = `SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 50`;
-    } else if (tier === 2) {
+    } else if (tierNum === 2) {
       vocabQuery = `
         SELECT vid, spelling, reading FROM (
           SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 35)
@@ -88,10 +98,10 @@ router.post('/generate', async (req, res) => {
     if (level === 'white') {
       grammarLevels = ['master', 'expert'];
       grammarLimit = 1;
-    } else if (tier === 1) {
+    } else if (tierNum === 1) {
       grammarLevels = ['master', 'expert'];
       grammarLimit = 6;
-    } else if (tier === 2) {
+    } else if (tierNum === 2) {
       grammarLevels = ['master', 'expert', 'seasoned'];
       grammarLimit = 6;
     } else {
@@ -108,7 +118,7 @@ router.post('/generate', async (req, res) => {
 
     // Call Claude to generate the drill
     const drill = await generateDrill({
-      tier,
+      tier: tierNum,
       level,
       domain: domainKey,
       scenario,
@@ -123,12 +133,12 @@ router.post('/generate', async (req, res) => {
       vocabulary_used: drill.vocabulary_used,
       grammar_used: drill.grammar_used,
       domain: domainKey,
-      tier,
+      tier: tierNum,
       level,
     });
   } catch (err) {
     console.error('Drill generation error:', err);
-    res.status(500).json({ error: 'Failed to generate drill', detail: err.message });
+    res.status(500).json({ error: 'Failed to generate drill' });
   }
 });
 
@@ -150,6 +160,9 @@ router.post('/submit', async (req, res) => {
 
     if (!user_response || !user_response.trim()) {
       return res.status(400).json({ error: 'No response provided' });
+    }
+    if (typeof user_response !== 'string' || user_response.length > 2000) {
+      return res.status(400).json({ error: 'Response too long (max 2000 characters)' });
     }
 
     const db = getDb();
@@ -206,7 +219,7 @@ router.post('/submit', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('Drill grading error:', err);
-    res.status(500).json({ error: 'Failed to grade response', detail: err.message });
+    res.status(500).json({ error: 'Failed to grade response' });
   }
 });
 
@@ -214,6 +227,13 @@ router.post('/submit', async (req, res) => {
 router.post('/generate-free', async (req, res) => {
   try {
     const { difficulty = 1, domain: requestedDomain } = req.body;
+
+    // Validate inputs
+    const diffNum = Number(difficulty);
+    if (!Number.isInteger(diffNum) || diffNum < 1 || diffNum > 5) {
+      return res.status(400).json({ error: 'Invalid difficulty (must be 1-5)' });
+    }
+
     const db = getDb();
 
     // Pick domain and scenario
@@ -224,14 +244,14 @@ router.post('/generate-free', async (req, res) => {
 
     // Select vocabulary from ALL tiers, weighted by difficulty
     let vocabQuery;
-    if (difficulty <= 2) {
+    if (diffNum <= 2) {
       vocabQuery = `
         SELECT vid, spelling, reading FROM (
           SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 40)
           UNION ALL
           SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 10)
         )`;
-    } else if (difficulty <= 4) {
+    } else if (diffNum <= 4) {
       vocabQuery = `
         SELECT vid, spelling, reading FROM (
           SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 25)
@@ -255,10 +275,10 @@ router.post('/generate-free', async (req, res) => {
     // Select grammar from ALL levels, weighted by difficulty
     let grammarLevels;
     let grammarLimit;
-    if (difficulty <= 2) {
+    if (diffNum <= 2) {
       grammarLevels = ['master', 'expert', 'seasoned'];
       grammarLimit = 8;
-    } else if (difficulty <= 4) {
+    } else if (diffNum <= 4) {
       grammarLevels = ['master', 'expert', 'seasoned', 'adept'];
       grammarLimit = 8;
     } else {
@@ -274,7 +294,7 @@ router.post('/generate-free', async (req, res) => {
     ).all(...grammarLevels, grammarLimit);
 
     const drill = await generateFreeDrill({
-      difficulty,
+      difficulty: diffNum,
       domain: domainKey,
       scenario,
       vocabulary,
@@ -290,11 +310,11 @@ router.post('/generate-free', async (req, res) => {
       target_grammar: drill.target_grammar,
       key_info_points: drill.key_info_points,
       domain: domainKey,
-      difficulty,
+      difficulty: diffNum,
     });
   } catch (err) {
     console.error('Free drill generation error:', err);
-    res.status(500).json({ error: 'Failed to generate free drill', detail: err.message });
+    res.status(500).json({ error: 'Failed to generate free drill' });
   }
 });
 
@@ -315,6 +335,9 @@ router.post('/submit-free', async (req, res) => {
 
     if (!user_response || !user_response.trim()) {
       return res.status(400).json({ error: 'No response provided' });
+    }
+    if (typeof user_response !== 'string' || user_response.length > 2000) {
+      return res.status(400).json({ error: 'Response too long (max 2000 characters)' });
     }
 
     const db = getDb();
@@ -371,7 +394,7 @@ router.post('/submit-free', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('Free drill grading error:', err);
-    res.status(500).json({ error: 'Failed to grade response', detail: err.message });
+    res.status(500).json({ error: 'Failed to grade response' });
   }
 });
 
@@ -382,6 +405,12 @@ router.post('/chat', async (req, res) => {
 
     if (!question || !question.trim()) {
       return res.status(400).json({ error: 'No question provided' });
+    }
+    if (typeof question !== 'string' || question.length > 2000) {
+      return res.status(400).json({ error: 'Question too long (max 2000 characters)' });
+    }
+    if (Array.isArray(conversationHistory) && conversationHistory.length > 20) {
+      return res.status(400).json({ error: 'Conversation history too long (max 20 entries)' });
     }
 
     const answer = await chatFollowUp({
@@ -401,7 +430,7 @@ router.post('/chat', async (req, res) => {
     res.json({ answer });
   } catch (err) {
     console.error('Chat error:', err);
-    res.status(500).json({ error: 'Failed to get answer', detail: err.message });
+    res.status(500).json({ error: 'Failed to get answer' });
   }
 });
 
@@ -427,7 +456,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     res.json({ text: transcription.text });
   } catch (err) {
     console.error('Transcription error:', err);
-    res.status(500).json({ error: 'Failed to transcribe audio', detail: err.message });
+    res.status(500).json({ error: 'Failed to transcribe audio' });
   }
 });
 
@@ -455,7 +484,7 @@ router.post('/tts', async (req, res) => {
     res.send(buffer);
   } catch (err) {
     console.error('TTS error:', err);
-    res.status(500).json({ error: 'Failed to generate speech', detail: err.message });
+    res.status(500).json({ error: 'Failed to generate speech' });
   }
 });
 

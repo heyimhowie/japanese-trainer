@@ -123,7 +123,7 @@ router.get('/dashboard', (req, res) => {
     });
   } catch (err) {
     console.error('Dashboard error:', err);
-    res.status(500).json({ error: 'Failed to load dashboard', detail: err.message });
+    res.status(500).json({ error: 'Failed to load dashboard' });
   }
 });
 

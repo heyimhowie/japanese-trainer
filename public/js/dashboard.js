@@ -1,3 +1,8 @@
+// --- Service Worker registration ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 async function loadDashboard() {
   try {
     const res = await fetch('/api/stats/dashboard');

@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Targeted Drills - Japanese Trainer</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f0f1a">
 </head>
 <body>
   <nav>
@@ -38,7 +43,7 @@
       <div class="prompt-card" id="prompt-card" style="display: none;">
         <div class="domain-tag" id="prompt-domain"></div>
         <div class="english" id="prompt-english"></div>
-        <button class="btn-hint" id="btn-hint" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'; this.textContent = this.nextElementSibling.style.display === 'block' ? 'Hide Hint' : 'Show Hint'">Show Hint</button>
+        <button class="btn-hint" id="btn-hint">Show Hint</button>
         <div class="hints" id="prompt-hints" style="display: none;"></div>
       </div>
 

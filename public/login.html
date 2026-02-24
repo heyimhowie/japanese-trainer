@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Japanese Trainer</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f0f1a">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Japanese Trainer</h1>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="username">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <div id="login-error" class="login-error" style="display:none;"></div>
+        <button type="submit" class="btn btn-primary">Log in</button>
+      </form>
+    </div>
+  </div>
+  <script src="/js/login.js"></script>
+</body>
+</html>

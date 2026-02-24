@@ -36,6 +36,14 @@ const btnTts = document.getElementById('btn-tts');
 const btnNext = document.getElementById('btn-next');
 const chatArea = document.getElementById('chat-area');
 
+// --- Hint toggle ---
+const btnHint = document.getElementById('btn-hint');
+btnHint.addEventListener('click', () => {
+  const showing = promptHints.style.display === 'block';
+  promptHints.style.display = showing ? 'none' : 'block';
+  btnHint.textContent = showing ? 'Show Hint' : 'Hide Hint';
+});
+
 // --- Init ---
 async function init() {
   try {

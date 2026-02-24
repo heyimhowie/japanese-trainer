@@ -1,3 +1,8 @@
+// --- Service Worker registration ---
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
 // --- Shared utilities for drill pages ---
 
 // Convert 漢字(かんじ) notation to <ruby> tags
