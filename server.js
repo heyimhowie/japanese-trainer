@@ -20,6 +20,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'media-src': ["'self'", 'blob:'],
       'upgrade-insecure-requests': process.env.NODE_ENV === 'production' ? [] : null,
     },
   },
