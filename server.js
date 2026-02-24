@@ -118,6 +118,19 @@ app.use('/api/', requireAuth, apiLimiter);
 app.use('/api/drill', drillRoutes);
 app.use('/api/stats', statsRoutes);
 
+// Auto-seed if database is empty (first deploy)
+const { getDb } = require('./db/index');
+try {
+  const db = getDb();
+  const count = db.prepare('SELECT COUNT(*) as n FROM vocabulary_status').get().n;
+  if (count === 0) {
+    console.log('Empty database detected, running seed...');
+    require('./db/seed');
+  }
+} catch (err) {
+  console.error('Auto-seed check failed:', err.message);
+}
+
 app.listen(PORT, () => {
   console.log(`Japanese Trainer running at http://localhost:${PORT}`);
 });
