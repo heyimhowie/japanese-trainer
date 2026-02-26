@@ -80,7 +80,7 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
           if (!word) continue;
 
           const row = db.prepare(
-            'SELECT id, times_drilled, times_correct, production_status FROM vocabulary_status WHERE spelling = ?'
+            'SELECT vid, times_drilled, times_correct, production_status FROM vocabulary_status WHERE spelling = ?'
           ).get(word);
           if (!row) continue;
 
@@ -95,8 +95,8 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
           }
 
           db.prepare(
-            'UPDATE vocabulary_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE id = ?'
-          ).run(newDrilled, newCorrect, newStatus, now, row.id);
+            'UPDATE vocabulary_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE vid = ?'
+          ).run(newDrilled, newCorrect, newStatus, now, row.vid);
         }
       });
       updateVocab();
