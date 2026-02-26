@@ -93,6 +93,17 @@ function initSchema() {
       minutes_practiced REAL DEFAULT 0,
       streak_day BOOLEAN DEFAULT FALSE
     );
+
+    CREATE TABLE IF NOT EXISTS drill_queue (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      drill_type  TEXT NOT NULL,
+      tier        INTEGER,
+      level       TEXT,
+      difficulty  INTEGER,
+      domain      TEXT NOT NULL,
+      payload     TEXT NOT NULL,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 

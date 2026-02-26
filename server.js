@@ -132,6 +132,10 @@ try {
   console.error('Auto-seed check failed:', err.message);
 }
 
+// Pre-generate drill queue for instant first drills
+const { fillQueue } = require('./lib/drillQueue');
+fillQueue();
+
 app.listen(PORT, () => {
   console.log(`Japanese Trainer running at http://localhost:${PORT}`);
 });

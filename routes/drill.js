@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { getDb } = require('../db/index');
 const { generateDrill, gradeResponse, chatFollowUp, generateFreeDrill, gradeFreeDrillResponse } = require('../lib/claude');
+const { popDrill, replenishIfNeeded } = require('../lib/drillQueue');
 
 const router = express.Router();
 const upload = multer({
@@ -48,6 +49,14 @@ router.post('/generate', async (req, res) => {
       return res.status(400).json({ error: 'Invalid tier (must be 1-3)' });
     }
 
+    // Try pre-generated queue first
+    const queued = popDrill('targeted', { tier: tierNum, level });
+    if (queued) {
+      replenishIfNeeded('targeted', { tier: tierNum, level });
+      return res.json(queued);
+    }
+
+    // Fall through to live generation
     const db = getDb();
 
     // Pick domain and scenario
@@ -234,6 +243,14 @@ router.post('/generate-free', async (req, res) => {
       return res.status(400).json({ error: 'Invalid difficulty (must be 1-5)' });
     }
 
+    // Try pre-generated queue first
+    const queued = popDrill('free', { difficulty: diffNum });
+    if (queued) {
+      replenishIfNeeded('free', { difficulty: diffNum });
+      return res.json(queued);
+    }
+
+    // Fall through to live generation
     const db = getDb();
 
     // Pick domain and scenario
