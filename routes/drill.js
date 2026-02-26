@@ -28,6 +28,117 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
+// Helper: fuzzy-match a grammar pattern string from Claude to a grammar_status row
+function findGrammarMatch(db, rawPattern) {
+  if (!rawPattern || typeof rawPattern !== 'string') return null;
+
+  // Clean the raw pattern: strip em-dash suffixes, colon suffixes, trailing English parentheticals
+  let cleaned = rawPattern
+    .replace(/\s*[—–-]\s*.+$/, '')       // "に — time marker" → "に"
+    .replace(/\s*[:：]\s*.+$/, '')        // "に: time marker" → "に"
+    .replace(/\s*\([^()]*[a-zA-Z][^()]*\)\s*$/, '') // "に (time marker)" → "に"
+    .trim();
+
+  if (!cleaned) return null;
+
+  // 1. Exact match
+  let row = db.prepare('SELECT id FROM grammar_status WHERE pattern_name = ?').get(cleaned);
+  if (row) return row.id;
+
+  // 2. Case-insensitive match
+  row = db.prepare('SELECT id FROM grammar_status WHERE pattern_name = ? COLLATE NOCASE').get(cleaned);
+  if (row) return row.id;
+
+  // 3. Tilde normalization (～ ↔ 〜 ↔ ~)
+  const tildeNormalized = cleaned.replace(/[～〜~]/g, '～');
+  row = db.prepare("SELECT id FROM grammar_status WHERE REPLACE(REPLACE(REPLACE(pattern_name, '〜', '～'), '~', '～'), '～', '～') = ?").get(tildeNormalized);
+  if (row) return row.id;
+
+  // 4. Substring containment — longest match wins to avoid "が" clobbering "がある"
+  const candidates = db.prepare(
+    "SELECT id, pattern_name FROM grammar_status WHERE ? LIKE '%' || pattern_name || '%' OR pattern_name LIKE '%' || ? || '%'"
+  ).all(cleaned, cleaned);
+
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.pattern_name.length - a.pattern_name.length);
+    return candidates[0].id;
+  }
+
+  return null;
+}
+
+// Helper: update production tracking for vocab and grammar after grading
+function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
+  try {
+    const now = new Date().toISOString();
+
+    // Update vocabulary
+    if (Array.isArray(vocabItems) && vocabItems.length > 0) {
+      const updateVocab = db.transaction(() => {
+        for (const item of vocabItems) {
+          const word = item.spelling || item.word;
+          if (!word) continue;
+
+          const row = db.prepare(
+            'SELECT id, times_drilled, times_correct, production_status FROM vocabulary_status WHERE spelling = ?'
+          ).get(word);
+          if (!row) continue;
+
+          const newDrilled = row.times_drilled + 1;
+          const newCorrect = row.times_correct + (isCorrect ? 1 : 0);
+
+          let newStatus = row.production_status;
+          if (isCorrect && newStatus === 'never_attempted') {
+            newStatus = 'produced_once';
+          } else if (isCorrect && newCorrect >= 3) {
+            newStatus = 'consistently_produced';
+          }
+
+          db.prepare(
+            'UPDATE vocabulary_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE id = ?'
+          ).run(newDrilled, newCorrect, newStatus, now, row.id);
+        }
+      });
+      updateVocab();
+    }
+
+    // Update grammar
+    if (Array.isArray(grammarItems) && grammarItems.length > 0) {
+      const updateGrammar = db.transaction(() => {
+        for (const item of grammarItems) {
+          const pattern = typeof item === 'string' ? item : (item.pattern_name || item.grammar_point || item.name);
+          if (!pattern) continue;
+
+          const grammarId = findGrammarMatch(db, pattern);
+          if (!grammarId) continue;
+
+          const row = db.prepare(
+            'SELECT times_drilled, times_correct, production_status FROM grammar_status WHERE id = ?'
+          ).get(grammarId);
+          if (!row) continue;
+
+          const newDrilled = row.times_drilled + 1;
+          const newCorrect = row.times_correct + (isCorrect ? 1 : 0);
+
+          let newStatus = row.production_status;
+          if (isCorrect && newStatus === 'never_attempted') {
+            newStatus = 'sometimes_correct';
+          } else if (isCorrect && newCorrect >= 3) {
+            newStatus = 'reliable';
+          }
+
+          db.prepare(
+            'UPDATE grammar_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE id = ?'
+          ).run(newDrilled, newCorrect, newStatus, now, grammarId);
+        }
+      });
+      updateGrammar();
+    }
+  } catch (err) {
+    console.error('Production tracking update error (non-fatal):', err);
+  }
+}
+
 // GET /api/drill/domains — list available life domains
 router.get('/domains', (req, res) => {
   const domains = Object.entries(lifeContext.life_domains).map(([key, val]) => ({
@@ -225,6 +336,8 @@ router.post('/submit', async (req, res) => {
       mode === 'typed' ? 1 : 0
     );
 
+    updateProductionTracking(db, vocabulary_used, grammar_used, result.is_correct);
+
     res.json(result);
   } catch (err) {
     console.error('Drill grading error:', err);
@@ -407,6 +520,8 @@ router.post('/submit-free', async (req, res) => {
       mode === 'voice' ? 1 : 0,
       mode === 'typed' ? 1 : 0
     );
+
+    updateProductionTracking(db, target_vocabulary, target_grammar, result.is_correct);
 
     res.json(result);
   } catch (err) {
