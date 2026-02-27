@@ -773,7 +773,7 @@ ruby rt {
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   nav {
     flex-wrap: wrap;
     justify-content: center;
