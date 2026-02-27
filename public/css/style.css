@@ -75,6 +75,7 @@ nav .nav-links a {
   border-radius: var(--radius-sm);
   transition: background 0.15s, color 0.15s;
 }
+.nav-short { display: none; }
 nav .nav-links a:hover,
 nav .nav-links a.active {
   color: var(--text);
@@ -791,6 +792,8 @@ ruby rt {
     font-size: 0.82em;
     padding: 6px 12px;
   }
+  .nav-full { display: none; }
+  .nav-short { display: inline; }
   .container {
     padding: 12px;
   }
