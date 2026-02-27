@@ -4,83 +4,83 @@
     "family": {
       "topics": ["husband and dad", "daily family routines", "kids activities", "taking kids to BJJ, Judo, basketball"],
       "scenarios": [
-        "Describing your weekend with the family",
-        "Talking about what your kids are into",
-        "Explaining your daily routine as a parent",
-        "Telling someone about your dog Kodak (goldendoodle)"
+        "Your friend asks what you're doing this weekend — you have plans with the kids",
+        "A coworker mentions their kid started a sport — you mention yours do martial arts too",
+        "You're running late to meet a friend because morning was chaos with the kids",
+        "Your neighbor asks about the dog they saw you walking"
       ]
     },
     "coaching": {
       "topics": ["U8 girls basketball", "principles-based coaching", "practice planning", "teaching fundamentals"],
       "scenarios": [
-        "Explaining what you coach and your philosophy",
-        "Describing a recent practice",
-        "Talking about why you don't use set plays for young kids",
-        "Explaining a drill or activity you ran"
+        "Another parent at pickup asks if you'd recommend their kid join the team",
+        "A friend asks how last weekend's game went",
+        "Someone asks why you volunteer to coach — you explain what you get out of it",
+        "You're telling another coach about a drill that worked really well at practice"
       ]
     },
     "work": {
       "topics": ["IT project manager", "enterprise technology", "SAP S/4HANA", "Fluor Corporation"],
       "scenarios": [
-        "Describing your job to someone",
-        "Talking about a project you're working on",
-        "Explaining what your company does",
-        "Describing a typical work day"
+        "Someone at a party asks what you do — you try to explain IT project management simply",
+        "A friend asks how your week at work was — it was stressful because of a deadline",
+        "You're catching up with an old friend and they ask if you like your job",
+        "A colleague from another department asks what your current project is about"
       ]
     },
     "japanese_learning": {
       "topics": ["3 years studying", "anime", "light novels", "JPDB", "speaking practice"],
       "scenarios": [
-        "Explaining why you started learning Japanese",
-        "Describing how you study",
-        "Talking about your favorite anime or manga",
-        "Discussing your goals with Japanese"
+        "A Japanese person asks how long you've been studying — they're surprised by your level",
+        "A friend asks what anime you're watching right now and if it's good",
+        "Someone asks for advice on how to start learning Japanese",
+        "You're explaining to a friend why you watch anime without subtitles now"
       ]
     },
     "technology_ai": {
       "topics": ["learning about AI", "Claude Code", "building apps", "Bitcoin", "investing"],
       "scenarios": [
-        "Explaining AI to someone simply",
-        "Talking about a project you built",
-        "Discussing Bitcoin or investing interests",
-        "Describing how you use AI tools"
+        "A friend saw a news article about AI and asks you to explain what it actually does",
+        "Someone asks what you built recently — you describe your latest project",
+        "A coworker is curious about Bitcoin — they ask if it's worth investing in",
+        "You're recommending an AI tool to a friend who's never used one"
       ]
     },
     "health_fitness": {
       "topics": ["working out", "eating healthy", "fitness routine"],
       "scenarios": [
-        "Describing your workout routine",
-        "Talking about what you eat",
-        "Explaining your health goals",
-        "Discussing a recent workout"
+        "A friend notices you look more fit and asks what you've been doing",
+        "Someone at work asks where you go for lunch — you mention you meal prep",
+        "Your gym buddy suggests trying a new workout — you're interested but unsure",
+        "A friend invites you to eat out, but you're trying to eat healthy this week"
       ]
     },
     "photography": {
       "topics": ["photography", "film photography", "camera gear", "digital vs film"],
       "scenarios": [
-        "Explaining your photography hobby",
-        "Talking about your camera gear",
-        "Describing why you like film photography",
-        "Discussing a recent photo you took"
+        "Someone sees your camera and asks why you still shoot film",
+        "A friend asks you to take photos at their event this weekend",
+        "You just got a photo developed that turned out amazing — you're showing a friend",
+        "Someone asks what camera they should buy as a beginner"
       ]
     },
     "travel": {
       "topics": ["traveling", "places visited", "trip planning", "Japan travel"],
       "scenarios": [
-        "Talking about a trip you took",
-        "Planning a trip to Japan",
-        "Describing your favorite travel destination",
-        "Asking for recommendations in a new city"
+        "A coworker is planning a trip to Japan and asks for your recommendations",
+        "You just got back from a trip and a friend asks how it was",
+        "You're trying to convince a friend to travel somewhere together this year",
+        "Someone asks what your favorite place you've visited is and why"
       ]
     },
     "food_and_coffee": {
       "topics": ["coffee", "going out to eat", "restaurants", "trying new food", "eating healthy"],
       "scenarios": [
-        "Ordering coffee at a cafe",
-        "Recommending a restaurant to a friend",
-        "Describing your favorite food or cuisine",
-        "Talking about a restaurant you went to recently",
-        "Explaining what kind of coffee you like"
+        "You're at a cafe with a friend and they ask what you usually order",
+        "A coworker asks if you know a good restaurant nearby for dinner",
+        "You tried a new restaurant last weekend and want to tell your friend about it",
+        "Someone offers you instant coffee — you politely decline and explain your preference",
+        "A friend visiting from out of town asks where they should eat"
       ]
     }
   }
