@@ -21,6 +21,11 @@ const outPhrases = document.getElementById('out-phrases');
 const outStarters = document.getElementById('out-starters');
 const outTopics = document.getElementById('out-topics');
 
+const historyCard = document.getElementById('history-card');
+const historyList = document.getElementById('history-list');
+
+let activeHistoryId = null;
+
 // --- Init ---
 async function init() {
   try {
@@ -36,6 +41,7 @@ async function init() {
   } catch (err) {
     console.error('Failed to load domains:', err);
   }
+  await loadHistory();
 }
 
 init();
@@ -79,6 +85,18 @@ async function generate() {
 
     const result = await res.json();
     showResult(result);
+    if (result.id) {
+      prependHistoryItem({
+        id: result.id,
+        created_at: new Date().toISOString(),
+        domain: result.domain,
+        style: result.style,
+        difficulty: result.difficulty,
+        custom_topic: body.customTopic || null,
+        scenario_summary: result.scenario_summary || null,
+      });
+      setActiveHistoryItem(result.id);
+    }
   } catch (err) {
     console.error('Generate error:', err);
     loading.style.display = 'none';
@@ -167,6 +185,127 @@ function showResult(result) {
   }
 
   output.style.display = 'block';
+}
+
+// --- History ---
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/drill/conv-prep-history');
+    if (!res.ok) return;
+    const entries = await res.json();
+    if (entries.length === 0) return;
+    historyList.innerHTML = '';
+    for (const entry of entries) {
+      historyList.appendChild(createHistoryItem(entry));
+    }
+    historyCard.style.display = '';
+  } catch (err) {
+    console.error('Failed to load history:', err);
+  }
+}
+
+function relativeTime(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return new Date(dateStr).toLocaleDateString();
+}
+
+const styleLabelsMap = {
+  casual_chat: 'Casual Chat',
+  role_play: 'Role Play',
+  debate: 'Debate',
+  storytelling: 'Storytelling',
+};
+
+function createHistoryItem(entry) {
+  const li = document.createElement('li');
+  li.className = 'history-item';
+  li.dataset.id = entry.id;
+
+  const summary = entry.scenario_summary || entry.custom_topic || 'Conversation prep';
+  const domain = (entry.domain || '').replace(/_/g, ' ');
+  const style = styleLabelsMap[entry.style] || entry.style;
+
+  li.innerHTML = `
+    <div class="history-item-main">
+      <div class="history-item-summary">${escapeHtml(summary)}</div>
+      <div class="history-item-meta">
+        <span class="domain-tag">${escapeHtml(domain)}</span>
+        <span class="style-tag">${escapeHtml(style)}</span>
+        <span class="difficulty-tag">Lv ${entry.difficulty}</span>
+        <span class="history-time">${relativeTime(entry.created_at)}</span>
+      </div>
+    </div>
+    <button class="history-delete" title="Delete">&times;</button>
+  `;
+
+  li.querySelector('.history-item-main').addEventListener('click', () => loadHistoryEntry(entry.id));
+  li.querySelector('.history-delete').addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteHistoryEntry(entry.id, li);
+  });
+
+  return li;
+}
+
+function prependHistoryItem(entry) {
+  const li = createHistoryItem(entry);
+  historyList.prepend(li);
+  historyCard.style.display = '';
+}
+
+function setActiveHistoryItem(id) {
+  activeHistoryId = id;
+  for (const el of historyList.children) {
+    el.classList.toggle('active', el.dataset.id === String(id));
+  }
+}
+
+async function loadHistoryEntry(id) {
+  loading.style.display = 'block';
+  output.style.display = 'none';
+  generateArea.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/drill/conv-prep-history/' + id);
+    if (!res.ok) throw new Error('Failed to load');
+    const entry = await res.json();
+    const result = {
+      ...entry.payload,
+      domain: entry.domain,
+      style: entry.style,
+      difficulty: entry.difficulty,
+    };
+    showResult(result);
+    setActiveHistoryItem(id);
+  } catch (err) {
+    console.error('Failed to load history entry:', err);
+    loading.style.display = 'none';
+    generateArea.style.display = 'block';
+    alert('Failed to load history entry');
+  }
+}
+
+async function deleteHistoryEntry(id, li) {
+  try {
+    const res = await fetch('/api/drill/conv-prep-history/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete');
+    li.remove();
+    if (historyList.children.length === 0) {
+      historyCard.style.display = 'none';
+    }
+    if (activeHistoryId === id) {
+      activeHistoryId = null;
+    }
+  } catch (err) {
+    console.error('Failed to delete history entry:', err);
+  }
 }
 
 // --- Copy button ---

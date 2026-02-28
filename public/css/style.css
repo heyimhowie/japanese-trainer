@@ -1022,6 +1022,78 @@ ruby rt {
   border-radius: 50%;
 }
 
+/* Conv Prep — history list */
+.history-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.history-item:hover {
+  border-color: var(--text-muted);
+}
+.history-item.active {
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.08);
+}
+.history-item-main {
+  flex: 1;
+  min-width: 0;
+}
+.history-item-summary {
+  font-size: 0.9em;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.history-item-meta .domain-tag,
+.history-item-meta .style-tag,
+.history-item-meta .difficulty-tag {
+  font-size: 0.6em;
+  padding: 1px 7px;
+}
+.history-time {
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+.history-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+.history-item:hover .history-delete {
+  opacity: 1;
+}
+.history-delete:hover {
+  color: var(--error);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   nav {

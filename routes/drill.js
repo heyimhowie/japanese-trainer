@@ -622,8 +622,22 @@ router.post('/generate-conv-prep', async (req, res) => {
       grammar,
     });
 
+    // Save to history
+    const insertResult = db.prepare(`
+      INSERT INTO conv_prep_history (domain, style, difficulty, custom_topic, scenario_summary, payload)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      domainKey,
+      style,
+      diffNum,
+      customTopic?.trim() || null,
+      result.scenario_summary || null,
+      JSON.stringify(result)
+    );
+
     res.json({
       ...result,
+      id: Number(insertResult.lastInsertRowid),
       domain: domainKey,
       difficulty: diffNum,
       style,
@@ -631,6 +645,56 @@ router.post('/generate-conv-prep', async (req, res) => {
   } catch (err) {
     console.error('Conv prep generation error:', err);
     res.status(500).json({ error: 'Failed to generate conversation prep' });
+  }
+});
+
+// GET /api/drill/conv-prep-history — list past conv preps
+router.get('/conv-prep-history', (req, res) => {
+  try {
+    const db = getDb();
+    const rows = db.prepare(
+      `SELECT id, created_at, domain, style, difficulty, custom_topic, scenario_summary
+       FROM conv_prep_history ORDER BY created_at DESC`
+    ).all();
+    res.json(rows);
+  } catch (err) {
+    console.error('Conv prep history list error:', err);
+    res.status(500).json({ error: 'Failed to load history' });
+  }
+});
+
+// GET /api/drill/conv-prep-history/:id — get full conv prep entry
+router.get('/conv-prep-history/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const row = db.prepare('SELECT * FROM conv_prep_history WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    row.payload = JSON.parse(row.payload);
+    res.json(row);
+  } catch (err) {
+    console.error('Conv prep history get error:', err);
+    res.status(500).json({ error: 'Failed to load history entry' });
+  }
+});
+
+// DELETE /api/drill/conv-prep-history/:id — delete a conv prep entry
+router.delete('/conv-prep-history/:id', (req, res) => {
+  try {
+    const db = getDb();
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const result = db.prepare('DELETE FROM conv_prep_history WHERE id = ?').run(id);
+    if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Conv prep history delete error:', err);
+    res.status(500).json({ error: 'Failed to delete history entry' });
   }
 });
 

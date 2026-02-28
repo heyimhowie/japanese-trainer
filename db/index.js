@@ -104,6 +104,17 @@ function initSchema() {
       payload     TEXT NOT NULL,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS conv_prep_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      domain TEXT,
+      style TEXT,
+      difficulty INTEGER,
+      custom_topic TEXT,
+      scenario_summary TEXT,
+      payload TEXT NOT NULL
+    );
   `);
 }
 
