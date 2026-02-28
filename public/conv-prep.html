@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Conv Prep - Japanese Trainer</title>
+  <link rel="stylesheet" href="/css/style.css?v=3">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f0f1a">
+</head>
+<body>
+  <nav>
+    <span class="logo">Japanese Trainer</span>
+    <div class="nav-links">
+      <a href="/"><span class="nav-full">Dashboard</span><span class="nav-short">Home</span></a>
+      <a href="/free.html"><span class="nav-full">Free Production</span><span class="nav-short">Free</span></a>
+      <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Targeted</span></a>
+      <a href="/conv-prep.html" class="active"><span class="nav-full">Conv Prep</span><span class="nav-short">Prep</span></a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Controls -->
+    <div class="card">
+      <h2>Conversation Setup</h2>
+      <div class="controls-row">
+        <select id="domain-select">
+          <option value="">Random Domain</option>
+        </select>
+        <select id="style-select">
+          <option value="casual_chat">Casual Chat</option>
+          <option value="role_play">Role Play</option>
+          <option value="debate">Debate</option>
+          <option value="storytelling">Storytelling</option>
+        </select>
+      </div>
+      <div class="controls-row" style="margin-top: 12px;">
+        <input type="text" id="custom-topic" placeholder="Custom topic (optional)" style="flex: 1;" maxlength="500">
+      </div>
+      <div class="controls-row" style="margin-top: 12px;">
+        <div class="difficulty-slider-row">
+          <label>Difficulty</label>
+          <input type="range" id="difficulty-slider" min="1" max="5" value="3" step="1">
+          <span class="difficulty-value" id="difficulty-value">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate button -->
+    <div id="generate-area" style="text-align: center; padding: 10px 0 20px;">
+      <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
+        Generate Prep
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div>Generating conversation prep...</div>
+    </div>
+
+    <!-- Output -->
+    <div id="output" style="display: none;">
+      <!-- Scenario Summary -->
+      <div class="card">
+        <div class="scenario-summary">
+          <div>
+            <span class="domain-tag" id="out-domain"></span>
+            <span class="style-tag" id="out-style"></span>
+            <span class="difficulty-tag" id="out-difficulty"></span>
+          </div>
+          <div class="summary-text" id="out-summary"></div>
+        </div>
+      </div>
+
+      <!-- ChatGPT System Prompt -->
+      <div class="card">
+        <div class="prompt-output-header">
+          <h2>ChatGPT System Prompt</h2>
+          <button class="btn-copy" id="btn-copy">Copy</button>
+        </div>
+        <div class="prompt-output" id="out-prompt"></div>
+      </div>
+
+      <!-- Key Vocabulary -->
+      <div class="card">
+        <h2>Key Vocabulary</h2>
+        <div class="vocab-grid" id="out-vocab"></div>
+      </div>
+
+      <!-- Useful Phrases -->
+      <div class="card">
+        <h2>Useful Phrases</h2>
+        <ul class="phrase-list" id="out-phrases"></ul>
+      </div>
+
+      <!-- Conversation Starters -->
+      <div class="card">
+        <h2>Conversation Starters</h2>
+        <ul class="starter-list" id="out-starters"></ul>
+      </div>
+
+      <!-- Topics to Bring Up -->
+      <div class="card">
+        <h2>Topics to Bring Up</h2>
+        <ul class="topics-list" id="out-topics"></ul>
+      </div>
+
+      <!-- Generate Another -->
+      <div style="text-align: center; padding: 20px 0;">
+        <button class="btn btn-secondary" id="btn-another" style="max-width: 300px; width: 100%;">
+          Generate Another
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script src="/js/conv-prep.js"></script>
+</body>
+</html>

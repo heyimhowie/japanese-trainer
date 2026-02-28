@@ -772,6 +772,256 @@ ruby rt {
   margin-bottom: 12px;
 }
 
+/* Conv Prep — ChatGPT prompt output */
+.prompt-output {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85em;
+  line-height: 1.7;
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.prompt-output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.btn-copy {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: 0.8em;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-copy:hover {
+  color: var(--text);
+  background: var(--border);
+}
+.btn-copy.copied {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+/* Conv Prep — vocab items */
+.vocab-grid {
+  display: grid;
+  gap: 8px;
+}
+.vocab-item {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.vocab-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.vocab-item .word {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+.vocab-item .reading {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+.vocab-item .meaning {
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+.vocab-item .example {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.known-badge, .new-badge {
+  display: inline-block;
+  font-size: 0.65em;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+.known-badge {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+.new-badge {
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+/* Conv Prep — phrases */
+.phrase-list {
+  list-style: none;
+  padding: 0;
+}
+.phrase-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.phrase-item:last-child {
+  border-bottom: none;
+}
+.phrase-item .jp {
+  font-size: 1.1em;
+  line-height: 2;
+}
+.phrase-item .en {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+.phrase-item .note {
+  font-size: 0.8em;
+  color: var(--accent);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Conv Prep — starters */
+.starter-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.starter-item {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 1.1em;
+  line-height: 2;
+}
+
+/* Conv Prep — difficulty slider */
+.difficulty-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+.difficulty-slider-row label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.difficulty-slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+.difficulty-slider-row .difficulty-value {
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Conv Prep — controls */
+.controls-row select,
+.controls-row input[type="text"] {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.9em;
+  font-family: inherit;
+}
+.controls-row input[type="text"]::placeholder {
+  color: var(--text-muted);
+}
+.controls-row input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Conv Prep — scenario summary */
+.scenario-summary {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.scenario-summary .summary-text {
+  font-size: 1em;
+  line-height: 1.6;
+  color: var(--text);
+  margin-top: 8px;
+}
+.style-tag {
+  display: inline-block;
+  background: rgba(255, 152, 0, 0.15);
+  color: var(--warning);
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.difficulty-tag {
+  display: inline-block;
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--accent);
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 100px;
+  letter-spacing: 0.05em;
+  margin-left: 6px;
+}
+
+/* Conv Prep — topics list */
+.topics-list {
+  list-style: none;
+  padding: 0;
+}
+.topics-list li {
+  padding: 6px 0;
+  padding-left: 16px;
+  position: relative;
+  font-size: 0.95em;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.topics-list li:last-child {
+  border-bottom: none;
+}
+.topics-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   nav {

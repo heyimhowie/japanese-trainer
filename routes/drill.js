@@ -3,7 +3,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { getDb } = require('../db/index');
-const { generateDrill, gradeResponse, chatFollowUp, generateFreeDrill, gradeFreeDrillResponse } = require('../lib/claude');
+const { generateDrill, gradeResponse, chatFollowUp, generateFreeDrill, gradeFreeDrillResponse, generateConversationPrep } = require('../lib/claude');
 const { popDrill, replenishIfNeeded } = require('../lib/drillQueue');
 
 const router = express.Router();
@@ -527,6 +527,110 @@ router.post('/submit-free', async (req, res) => {
   } catch (err) {
     console.error('Free drill grading error:', err);
     res.status(500).json({ error: 'Failed to grade response' });
+  }
+});
+
+// POST /api/drill/generate-conv-prep — generate conversation prep materials
+router.post('/generate-conv-prep', async (req, res) => {
+  try {
+    const { difficulty = 3, domain: requestedDomain, style = 'casual_chat', customTopic } = req.body;
+
+    // Validate inputs
+    const diffNum = Number(difficulty);
+    if (!Number.isInteger(diffNum) || diffNum < 1 || diffNum > 5) {
+      return res.status(400).json({ error: 'Invalid difficulty (must be 1-5)' });
+    }
+
+    const validStyles = ['casual_chat', 'role_play', 'debate', 'storytelling'];
+    if (!validStyles.includes(style)) {
+      return res.status(400).json({ error: 'Invalid style' });
+    }
+
+    if (customTopic && (typeof customTopic !== 'string' || customTopic.length > 500)) {
+      return res.status(400).json({ error: 'Custom topic too long (max 500 characters)' });
+    }
+
+    const db = getDb();
+
+    // Pick domain and scenario (same pattern as generate-free)
+    const domainKeys = Object.keys(lifeContext.life_domains);
+    const domainKey = requestedDomain || domainKeys[Math.floor(Math.random() * domainKeys.length)];
+    const domainData = lifeContext.life_domains[domainKey];
+    if (!domainData) {
+      return res.status(400).json({ error: 'Invalid domain' });
+    }
+    const scenario = domainData.scenarios[Math.floor(Math.random() * domainData.scenarios.length)];
+
+    // Select vocabulary weighted by difficulty (same pattern as generate-free)
+    let vocabQuery;
+    if (diffNum <= 2) {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 40)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 10)
+        )`;
+    } else if (diffNum <= 4) {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 25)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'weak' ORDER BY RANDOM() LIMIT 10)
+        )`;
+    } else {
+      vocabQuery = `
+        SELECT vid, spelling, reading FROM (
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'strong' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'moderate' ORDER BY RANDOM() LIMIT 15)
+          UNION ALL
+          SELECT vid, spelling, reading FROM (SELECT vid, spelling, reading FROM vocabulary_status WHERE jpdb_tier = 'weak' ORDER BY RANDOM() LIMIT 20)
+        )`;
+    }
+    const vocabulary = db.prepare(vocabQuery).all();
+
+    // Select grammar by difficulty-appropriate levels (same pattern as generate-free)
+    let grammarLevels;
+    let grammarLimit;
+    if (diffNum <= 2) {
+      grammarLevels = ['master', 'expert', 'seasoned'];
+      grammarLimit = 8;
+    } else if (diffNum <= 4) {
+      grammarLevels = ['master', 'expert', 'seasoned', 'adept'];
+      grammarLimit = 8;
+    } else {
+      grammarLevels = ['master', 'expert', 'seasoned', 'adept', 'beginner'];
+      grammarLimit = 10;
+    }
+    const placeholders = grammarLevels.map(() => '?').join(',');
+    const grammar = db.prepare(
+      `SELECT id, grammar_point, pattern_name, bunpro_level
+       FROM grammar_status
+       WHERE bunpro_level IN (${placeholders})
+       ORDER BY RANDOM() LIMIT ?`
+    ).all(...grammarLevels, grammarLimit);
+
+    const result = await generateConversationPrep({
+      difficulty: diffNum,
+      domain: domainKey,
+      scenario,
+      style,
+      customTopic: customTopic?.trim() || '',
+      vocabulary,
+      grammar,
+    });
+
+    res.json({
+      ...result,
+      domain: domainKey,
+      difficulty: diffNum,
+      style,
+    });
+  } catch (err) {
+    console.error('Conv prep generation error:', err);
+    res.status(500).json({ error: 'Failed to generate conversation prep' });
   }
 });
 
