@@ -1050,9 +1050,7 @@ ruby rt {
 .history-item-summary {
   font-size: 0.9em;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
   margin-bottom: 4px;
 }
 .history-item-meta {

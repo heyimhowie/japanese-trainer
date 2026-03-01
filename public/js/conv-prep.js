@@ -195,57 +195,78 @@ function showResult(result) {
   output.style.display = 'block';
 }
 
-// --- Save button ---
+// --- Save button (toggle: save or unsave) ---
 btnSave.addEventListener('click', async () => {
-  if (currentSavedId || !currentResult) return;
+  if (!currentResult) return;
 
   btnSave.disabled = true;
   try {
-    // Build payload: strip transient keys
-    const { domain, style, difficulty, _customTopic, ...payload } = currentResult;
+    if (currentSavedId) {
+      // Unsave: delete from DB
+      const res = await fetch('/api/drill/conv-prep-history/' + currentSavedId, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
 
-    const res = await fetch('/api/drill/conv-prep-history', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        domain,
-        style,
-        difficulty,
-        custom_topic: _customTopic || null,
-        scenario_summary: currentResult.scenario_summary || null,
-        payload,
-      }),
-    });
+      // Remove from saved list if open
+      if (savedListOpen) {
+        const li = savedList.querySelector(`[data-id="${currentSavedId}"]`);
+        if (li) li.remove();
+      } else {
+        savedListLoaded = false;
+      }
 
-    if (!res.ok) throw new Error('Save failed');
-    const { id } = await res.json();
+      currentSavedId = null;
+      btnSave.innerHTML = '&#9734;';
+      btnSave.classList.remove('saved');
+      btnSave.title = 'Save this prep';
 
-    currentSavedId = id;
-    btnSave.innerHTML = '&#9733;';
-    btnSave.classList.add('saved');
-    btnSave.title = 'Saved';
-
-    savedCount++;
-    updateSavedToggle();
-
-    // If saved list is open, prepend the new item
-    if (savedListOpen) {
-      const entry = {
-        id,
-        created_at: new Date().toISOString(),
-        domain,
-        style,
-        difficulty,
-        custom_topic: _customTopic || null,
-        scenario_summary: currentResult.scenario_summary || null,
-      };
-      savedList.prepend(createSavedItem(entry));
+      savedCount--;
+      updateSavedToggle();
     } else {
-      // Mark list as needing refresh on next open
-      savedListLoaded = false;
+      // Save: insert into DB
+      const { domain, style, difficulty, _customTopic, ...payload } = currentResult;
+
+      const res = await fetch('/api/drill/conv-prep-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain,
+          style,
+          difficulty,
+          custom_topic: _customTopic || null,
+          scenario_summary: currentResult.scenario_summary || null,
+          payload,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Save failed');
+      const { id } = await res.json();
+
+      currentSavedId = id;
+      btnSave.innerHTML = '&#9733;';
+      btnSave.classList.add('saved');
+      btnSave.title = 'Saved';
+
+      savedCount++;
+      updateSavedToggle();
+
+      // If saved list is open, prepend the new item
+      if (savedListOpen) {
+        const entry = {
+          id,
+          created_at: new Date().toISOString(),
+          domain,
+          style,
+          difficulty,
+          custom_topic: _customTopic || null,
+          scenario_summary: currentResult.scenario_summary || null,
+        };
+        savedList.prepend(createSavedItem(entry));
+      } else {
+        savedListLoaded = false;
+      }
     }
   } catch (err) {
-    console.error('Save error:', err);
+    console.error('Save/unsave error:', err);
   } finally {
     btnSave.disabled = false;
   }
