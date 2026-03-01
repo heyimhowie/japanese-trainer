@@ -1043,10 +1043,6 @@ ruby rt {
 .history-item:hover {
   border-color: var(--text-muted);
 }
-.history-item.active {
-  border-color: var(--accent);
-  background: rgba(108, 99, 255, 0.08);
-}
 .history-item-main {
   flex: 1;
   min-width: 0;
@@ -1092,6 +1088,50 @@ ruby rt {
 }
 .history-delete:hover {
   color: var(--error);
+}
+
+/* Conv Prep — save button */
+.btn-save {
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0 4px;
+  vertical-align: middle;
+  transition: color 0.15s, transform 0.15s;
+  line-height: 1;
+}
+.btn-save:hover {
+  color: var(--warning);
+  transform: scale(1.15);
+}
+.btn-save.saved {
+  color: var(--warning);
+}
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Conv Prep — saved toggle button */
+.btn-saved-toggle {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.btn-saved-toggle:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
 }
 
 /* Responsive */

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Conv Prep - Japanese Trainer</title>
-  <link rel="stylesheet" href="/css/style.css?v=4">
+  <link rel="stylesheet" href="/css/style.css?v=5">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,17 +49,22 @@
       </div>
     </div>
 
-    <!-- History -->
-    <div class="card" id="history-card" style="display: none;">
-      <h2>History</h2>
-      <ul class="history-list" id="history-list"></ul>
+    <!-- Generate button + Saved toggle -->
+    <div id="generate-area" style="text-align: center; padding: 10px 0 20px;">
+      <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
+        <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
+          Generate Prep
+        </button>
+        <button class="btn btn-saved-toggle" id="btn-saved-toggle" style="display: none;">
+          Saved (0)
+        </button>
+      </div>
     </div>
 
-    <!-- Generate button -->
-    <div id="generate-area" style="text-align: center; padding: 10px 0 20px;">
-      <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
-        Generate Prep
-      </button>
+    <!-- Saved list (hidden by default) -->
+    <div class="card" id="saved-list-card" style="display: none;">
+      <h2>Saved Preps</h2>
+      <ul class="history-list" id="saved-list"></ul>
     </div>
 
     <!-- Loading -->
@@ -77,6 +82,7 @@
             <span class="domain-tag" id="out-domain"></span>
             <span class="style-tag" id="out-style"></span>
             <span class="difficulty-tag" id="out-difficulty"></span>
+            <button class="btn-save" id="btn-save" title="Save this prep">&#9734;</button>
           </div>
           <div class="summary-text" id="out-summary"></div>
         </div>

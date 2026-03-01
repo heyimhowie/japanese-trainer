@@ -622,22 +622,8 @@ router.post('/generate-conv-prep', async (req, res) => {
       grammar,
     });
 
-    // Save to history
-    const insertResult = db.prepare(`
-      INSERT INTO conv_prep_history (domain, style, difficulty, custom_topic, scenario_summary, payload)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      domainKey,
-      style,
-      diffNum,
-      customTopic?.trim() || null,
-      result.scenario_summary || null,
-      JSON.stringify(result)
-    );
-
     res.json({
       ...result,
-      id: Number(insertResult.lastInsertRowid),
       domain: domainKey,
       difficulty: diffNum,
       style,
@@ -645,6 +631,39 @@ router.post('/generate-conv-prep', async (req, res) => {
   } catch (err) {
     console.error('Conv prep generation error:', err);
     res.status(500).json({ error: 'Failed to generate conversation prep' });
+  }
+});
+
+// POST /api/drill/conv-prep-history — explicitly save a conv prep
+router.post('/conv-prep-history', (req, res) => {
+  try {
+    const { domain, style, difficulty, custom_topic, scenario_summary, payload } = req.body;
+
+    if (!domain || !style || !payload) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const diffNum = Number(difficulty);
+    if (!Number.isInteger(diffNum) || diffNum < 1 || diffNum > 5) {
+      return res.status(400).json({ error: 'Invalid difficulty' });
+    }
+
+    const db = getDb();
+    const insertResult = db.prepare(`
+      INSERT INTO conv_prep_history (domain, style, difficulty, custom_topic, scenario_summary, payload)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      domain,
+      style,
+      diffNum,
+      custom_topic || null,
+      scenario_summary || null,
+      typeof payload === 'string' ? payload : JSON.stringify(payload)
+    );
+
+    res.json({ id: Number(insertResult.lastInsertRowid) });
+  } catch (err) {
+    console.error('Conv prep save error:', err);
+    res.status(500).json({ error: 'Failed to save prep' });
   }
 });
 

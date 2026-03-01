@@ -21,10 +21,16 @@ const outPhrases = document.getElementById('out-phrases');
 const outStarters = document.getElementById('out-starters');
 const outTopics = document.getElementById('out-topics');
 
-const historyCard = document.getElementById('history-card');
-const historyList = document.getElementById('history-list');
+const btnSave = document.getElementById('btn-save');
+const btnSavedToggle = document.getElementById('btn-saved-toggle');
+const savedListCard = document.getElementById('saved-list-card');
+const savedList = document.getElementById('saved-list');
 
-let activeHistoryId = null;
+let currentResult = null;   // the last generated/loaded result payload
+let currentSavedId = null;  // non-null when viewing a saved entry or just saved
+let savedCount = 0;
+let savedListLoaded = false;
+let savedListOpen = false;
 
 // --- Init ---
 async function init() {
@@ -41,7 +47,7 @@ async function init() {
   } catch (err) {
     console.error('Failed to load domains:', err);
   }
-  await loadHistory();
+  await fetchSavedCount();
 }
 
 init();
@@ -84,19 +90,11 @@ async function generate() {
     }
 
     const result = await res.json();
+    // Store the custom topic used for generation (needed for saving)
+    result._customTopic = body.customTopic || null;
+    currentResult = result;
+    currentSavedId = null;
     showResult(result);
-    if (result.id) {
-      prependHistoryItem({
-        id: result.id,
-        created_at: new Date().toISOString(),
-        domain: result.domain,
-        style: result.style,
-        difficulty: result.difficulty,
-        custom_topic: body.customTopic || null,
-        scenario_summary: result.scenario_summary || null,
-      });
-      setActiveHistoryItem(result.id);
-    }
   } catch (err) {
     console.error('Generate error:', err);
     loading.style.display = 'none';
@@ -108,6 +106,16 @@ async function generate() {
 // --- Show result ---
 function showResult(result) {
   loading.style.display = 'none';
+
+  // Reset save button
+  btnSave.innerHTML = '&#9734;';
+  btnSave.classList.remove('saved');
+  btnSave.title = 'Save this prep';
+  if (currentSavedId) {
+    btnSave.innerHTML = '&#9733;';
+    btnSave.classList.add('saved');
+    btnSave.title = 'Saved';
+  }
 
   // Scenario summary
   outDomain.textContent = (result.domain || '').replace(/_/g, ' ');
@@ -187,23 +195,116 @@ function showResult(result) {
   output.style.display = 'block';
 }
 
-// --- History ---
-async function loadHistory() {
+// --- Save button ---
+btnSave.addEventListener('click', async () => {
+  if (currentSavedId || !currentResult) return;
+
+  btnSave.disabled = true;
+  try {
+    // Build payload: strip transient keys
+    const { domain, style, difficulty, _customTopic, ...payload } = currentResult;
+
+    const res = await fetch('/api/drill/conv-prep-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        domain,
+        style,
+        difficulty,
+        custom_topic: _customTopic || null,
+        scenario_summary: currentResult.scenario_summary || null,
+        payload,
+      }),
+    });
+
+    if (!res.ok) throw new Error('Save failed');
+    const { id } = await res.json();
+
+    currentSavedId = id;
+    btnSave.innerHTML = '&#9733;';
+    btnSave.classList.add('saved');
+    btnSave.title = 'Saved';
+
+    savedCount++;
+    updateSavedToggle();
+
+    // If saved list is open, prepend the new item
+    if (savedListOpen) {
+      const entry = {
+        id,
+        created_at: new Date().toISOString(),
+        domain,
+        style,
+        difficulty,
+        custom_topic: _customTopic || null,
+        scenario_summary: currentResult.scenario_summary || null,
+      };
+      savedList.prepend(createSavedItem(entry));
+    } else {
+      // Mark list as needing refresh on next open
+      savedListLoaded = false;
+    }
+  } catch (err) {
+    console.error('Save error:', err);
+  } finally {
+    btnSave.disabled = false;
+  }
+});
+
+// --- Saved toggle button ---
+btnSavedToggle.addEventListener('click', async () => {
+  savedListOpen = !savedListOpen;
+  if (savedListOpen) {
+    savedListCard.style.display = '';
+    if (!savedListLoaded) {
+      await loadSavedList();
+    }
+  } else {
+    savedListCard.style.display = 'none';
+  }
+});
+
+// --- Fetch saved count on init ---
+async function fetchSavedCount() {
   try {
     const res = await fetch('/api/drill/conv-prep-history');
     if (!res.ok) return;
     const entries = await res.json();
-    if (entries.length === 0) return;
-    historyList.innerHTML = '';
-    for (const entry of entries) {
-      historyList.appendChild(createHistoryItem(entry));
-    }
-    historyCard.style.display = '';
+    savedCount = entries.length;
+    updateSavedToggle();
   } catch (err) {
-    console.error('Failed to load history:', err);
+    console.error('Failed to fetch saved count:', err);
   }
 }
 
+function updateSavedToggle() {
+  if (savedCount > 0) {
+    btnSavedToggle.style.display = '';
+    btnSavedToggle.textContent = `Saved (${savedCount})`;
+  } else {
+    btnSavedToggle.style.display = 'none';
+    savedListCard.style.display = 'none';
+    savedListOpen = false;
+  }
+}
+
+// --- Load saved list ---
+async function loadSavedList() {
+  try {
+    const res = await fetch('/api/drill/conv-prep-history');
+    if (!res.ok) return;
+    const entries = await res.json();
+    savedList.innerHTML = '';
+    for (const entry of entries) {
+      savedList.appendChild(createSavedItem(entry));
+    }
+    savedListLoaded = true;
+  } catch (err) {
+    console.error('Failed to load saved list:', err);
+  }
+}
+
+// --- Helpers ---
 function relativeTime(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -223,7 +324,7 @@ const styleLabelsMap = {
   storytelling: 'Storytelling',
 };
 
-function createHistoryItem(entry) {
+function createSavedItem(entry) {
   const li = document.createElement('li');
   li.className = 'history-item';
   li.dataset.id = entry.id;
@@ -245,29 +346,16 @@ function createHistoryItem(entry) {
     <button class="history-delete" title="Delete">&times;</button>
   `;
 
-  li.querySelector('.history-item-main').addEventListener('click', () => loadHistoryEntry(entry.id));
+  li.querySelector('.history-item-main').addEventListener('click', () => loadSavedEntry(entry.id));
   li.querySelector('.history-delete').addEventListener('click', (e) => {
     e.stopPropagation();
-    deleteHistoryEntry(entry.id, li);
+    deleteSavedEntry(entry.id, li);
   });
 
   return li;
 }
 
-function prependHistoryItem(entry) {
-  const li = createHistoryItem(entry);
-  historyList.prepend(li);
-  historyCard.style.display = '';
-}
-
-function setActiveHistoryItem(id) {
-  activeHistoryId = id;
-  for (const el of historyList.children) {
-    el.classList.toggle('active', el.dataset.id === String(id));
-  }
-}
-
-async function loadHistoryEntry(id) {
+async function loadSavedEntry(id) {
   loading.style.display = 'block';
   output.style.display = 'none';
   generateArea.style.display = 'none';
@@ -282,29 +370,32 @@ async function loadHistoryEntry(id) {
       style: entry.style,
       difficulty: entry.difficulty,
     };
+    currentResult = result;
+    currentSavedId = id;
     showResult(result);
-    setActiveHistoryItem(id);
   } catch (err) {
-    console.error('Failed to load history entry:', err);
+    console.error('Failed to load saved entry:', err);
     loading.style.display = 'none';
     generateArea.style.display = 'block';
-    alert('Failed to load history entry');
+    alert('Failed to load saved entry');
   }
 }
 
-async function deleteHistoryEntry(id, li) {
+async function deleteSavedEntry(id, li) {
   try {
     const res = await fetch('/api/drill/conv-prep-history/' + id, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete');
     li.remove();
-    if (historyList.children.length === 0) {
-      historyCard.style.display = 'none';
-    }
-    if (activeHistoryId === id) {
-      activeHistoryId = null;
+    savedCount--;
+    updateSavedToggle();
+    if (currentSavedId === id) {
+      currentSavedId = null;
+      btnSave.innerHTML = '&#9734;';
+      btnSave.classList.remove('saved');
+      btnSave.title = 'Save this prep';
     }
   } catch (err) {
-    console.error('Failed to delete history entry:', err);
+    console.error('Failed to delete saved entry:', err);
   }
 }
 
