@@ -1,10 +1,11 @@
-const CACHE_NAME = 'jp-trainer-v1';
+const CACHE_NAME = 'jp-trainer-v3';
 const SHELL_ASSETS = [
   '/css/style.css',
   '/js/shared.js',
   '/js/dashboard.js',
   '/js/drill.js',
   '/js/free.js',
+  '/js/conv-prep.js',
   '/images/icon-192.png',
   '/manifest.json',
 ];

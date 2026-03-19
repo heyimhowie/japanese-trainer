@@ -4,20 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Conv Prep - Japanese Trainer</title>
-  <link rel="stylesheet" href="/css/style.css?v=6">
+  <link rel="stylesheet" href="/css/style.css?v=8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f0f1a">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f9f9fb">
 </head>
 <body>
   <nav>
-    <span class="logo">Japanese Trainer</span>
+    <span class="logo">
+      <span class="material-symbols-outlined">menu_book</span>
+      Japanese Trainer
+    </span>
     <div class="nav-links">
       <a href="/"><span class="nav-full">Dashboard</span><span class="nav-short">Home</span></a>
       <a href="/free.html"><span class="nav-full">Free Production</span><span class="nav-short">Free</span></a>
-      <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Targeted</span></a>
+      <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Drills</span></a>
       <a href="/conv-prep.html" class="active"><span class="nav-full">Conv Prep</span><span class="nav-short">Prep</span></a>
     </div>
   </nav>
@@ -25,7 +32,10 @@
   <div class="container">
     <!-- Controls -->
     <div class="card">
-      <h2>Conversation Setup</h2>
+      <h2>
+        <span class="material-symbols-outlined" style="font-size: 1.1em; vertical-align: middle; margin-right: 4px;">forum</span>
+        Conversation Setup
+      </h2>
       <div class="controls-row">
         <select id="domain-select">
           <option value="">Random Domain</option>
@@ -49,22 +59,12 @@
       </div>
     </div>
 
-    <!-- Generate button + Saved toggle -->
+    <!-- Generate button -->
     <div id="generate-area" style="text-align: center; padding: 10px 0 20px;">
-      <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
-        <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
-          Generate Prep
-        </button>
-        <button class="btn btn-saved-toggle" id="btn-saved-toggle" style="display: none;">
-          Saved (0)
-        </button>
-      </div>
-    </div>
-
-    <!-- Saved list (hidden by default) -->
-    <div class="card" id="saved-list-card" style="display: none;">
-      <h2>Saved Preps</h2>
-      <ul class="history-list" id="saved-list"></ul>
+      <button class="btn btn-primary" id="btn-generate" style="max-width: 300px; width: 100%;">
+        <span class="material-symbols-outlined" style="font-size: 1.1em;">auto_awesome</span>
+        Generate Prep
+      </button>
     </div>
 
     <!-- Loading -->
@@ -76,58 +76,95 @@
     <!-- Output -->
     <div id="output" style="display: none;">
       <!-- Scenario Summary -->
-      <div class="card">
-        <div class="scenario-summary">
-          <div>
-            <span class="domain-tag" id="out-domain"></span>
-            <span class="style-tag" id="out-style"></span>
-            <span class="difficulty-tag" id="out-difficulty"></span>
-            <button class="btn-save" id="btn-save" title="Save this prep">&#9734;</button>
-          </div>
-          <div class="summary-text" id="out-summary"></div>
+      <div class="scenario-summary" id="scenario-summary" style="display: none;">
+        <div class="scenario-content">
+          <div class="tag-row" id="scenario-tags"></div>
+          <h2 class="scenario-title" id="scenario-title"></h2>
+          <p class="summary-text" id="scenario-text"></p>
         </div>
+        <button class="btn-save" id="btn-save" disabled>
+          <span class="material-symbols-outlined">star</span>
+        </button>
       </div>
 
       <!-- ChatGPT System Prompt -->
-      <div class="card">
+      <div class="prompt-output-card" id="system-prompt-card" style="display: none;">
         <div class="prompt-output-header">
-          <h2>ChatGPT System Prompt</h2>
-          <button class="btn-copy" id="btn-copy">Copy</button>
+          <h2>System Prompt</h2>
+          <button class="btn-copy" id="btn-copy">
+            <span class="material-symbols-outlined" style="font-size: 1em;">content_copy</span>
+            Copy Prompt
+          </button>
         </div>
-        <div class="prompt-output" id="out-prompt"></div>
+        <div class="prompt-output" id="prompt-output"></div>
       </div>
 
       <!-- Key Vocabulary -->
-      <div class="card">
+      <div class="card" id="vocab-card" style="display: none;">
         <h2>Key Vocabulary</h2>
-        <div class="vocab-grid" id="out-vocab"></div>
+        <div class="vocab-grid" id="vocab-list"></div>
       </div>
 
       <!-- Useful Phrases -->
-      <div class="card">
+      <div class="phrase-list-card" id="phrases-card" style="display: none;">
         <h2>Useful Phrases</h2>
-        <ul class="phrase-list" id="out-phrases"></ul>
+        <ul class="phrase-list" id="phrase-list"></ul>
       </div>
 
       <!-- Conversation Starters -->
-      <div class="card">
+      <div id="starters-card" style="display: none;">
         <h2>Conversation Starters</h2>
-        <ul class="starter-list" id="out-starters"></ul>
+        <ul class="starter-list" id="starter-list"></ul>
       </div>
 
-      <!-- Topics to Bring Up -->
-      <div class="card">
-        <h2>Topics to Bring Up</h2>
-        <ul class="topics-list" id="out-topics"></ul>
+      <!-- Talking Points -->
+      <div class="topics-card" id="topics-card" style="display: none;">
+        <h2>Talking Points</h2>
+        <ul class="topics-list" id="topics-list"></ul>
       </div>
 
       <!-- Generate Another -->
       <div style="text-align: center; padding: 20px 0;">
         <button class="btn btn-secondary" id="btn-another" style="max-width: 300px; width: 100%;">
+          <span class="material-symbols-outlined" style="font-size: 1.1em;">refresh</span>
           Generate Another
         </button>
       </div>
+
+      <!-- History toggle -->
+      <div class="history-toggle" id="history-section">
+        <button class="toggle-btn" id="btn-toggle-history">
+          <div class="toggle-left">
+            <span class="material-symbols-outlined" style="color: var(--text-muted)">folder_open</span>
+            <span class="label">View Prep History</span>
+          </div>
+          <span class="material-symbols-outlined expand-icon">expand_more</span>
+        </button>
+        <div id="history-content" style="display: none;">
+          <ul class="history-list" id="history-list"></ul>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Bottom Nav (Mobile) -->
+  <div class="bottom-nav">
+    <a href="/">
+      <span class="material-symbols-outlined">dashboard</span>
+      Dashboard
+    </a>
+    <a href="/free.html">
+      <span class="material-symbols-outlined">edit_note</span>
+      Free
+    </a>
+    <a href="/drill.html">
+      <span class="material-symbols-outlined">fitness_center</span>
+      Drills
+    </a>
+    <a href="/conv-prep.html" class="active">
+      <span class="material-symbols-outlined">forum</span>
+      Prep
+    </a>
   </div>
 
   <script src="/js/shared.js"></script>

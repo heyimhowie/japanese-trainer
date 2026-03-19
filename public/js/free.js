@@ -9,12 +9,15 @@ let sessionDrillCount = 0;
 const btnGenerate = document.getElementById('btn-generate');
 const generateArea = document.getElementById('generate-area');
 const loadingGenerate = document.getElementById('loading-generate');
+const promptHeaderInfo = document.getElementById('prompt-header-info');
 const promptCard = document.getElementById('prompt-card');
 const promptDomain = document.getElementById('prompt-domain');
+const promptTopicText = document.getElementById('prompt-topic-text');
 const promptJapanese = document.getElementById('prompt-japanese');
 const promptTranslation = document.getElementById('prompt-translation');
 const btnTtsPrompt = document.getElementById('btn-tts-prompt');
 const btnTranslationToggle = document.getElementById('btn-translation-toggle');
+const senseiTip = document.getElementById('sensei-tip');
 const inputArea = document.getElementById('input-area');
 const userInput = document.getElementById('user-input');
 const btnVoice = document.getElementById('btn-voice');
@@ -102,7 +105,9 @@ btnGenerate.addEventListener('click', generate);
 async function generate() {
   generateArea.style.display = 'none';
   loadingGenerate.style.display = 'block';
+  promptHeaderInfo.style.display = 'none';
   promptCard.style.display = 'none';
+  senseiTip.style.display = 'none';
   inputArea.style.display = 'none';
   resultCard.className = 'result-card';
   resultCard.style.display = 'none';
@@ -127,15 +132,21 @@ async function generate() {
     currentDrill = await res.json();
     drillStartTime = Date.now();
 
-    // Show prompt
-    promptDomain.textContent = currentDrill.domain.replace(/_/g, ' ');
+    // Show prompt header info
+    const domainLabel = currentDrill.domain.replace(/_/g, ' ');
+    promptDomain.textContent = domainLabel;
+    promptTopicText.textContent = 'Difficulty ' + getDifficulty();
+
+    // Show prompt card
     promptJapanese.innerHTML = furiganaToRuby(escapeHtml(currentDrill.japanese_prompt));
     promptTranslation.textContent = currentDrill.translation || '';
     promptTranslation.style.display = 'none';
     btnTranslationToggle.classList.remove('active');
 
     loadingGenerate.style.display = 'none';
+    promptHeaderInfo.style.display = 'flex';
     promptCard.style.display = 'block';
+    senseiTip.style.display = 'flex';
     inputArea.style.display = 'block';
 
     // Reset input
@@ -162,14 +173,14 @@ btnTtsPrompt.addEventListener('click', async () => {
   const text = stripFurigana(currentDrill?.japanese_prompt || '');
   if (!text) return;
   btnTtsPrompt.disabled = true;
-  btnTtsPrompt.textContent = '...';
+  btnTtsPrompt.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span>';
   try {
     await playTts(text);
   } catch (err) {
     console.error('TTS error:', err);
   } finally {
     btnTtsPrompt.disabled = false;
-    btnTtsPrompt.innerHTML = '&#x1F50A;';
+    btnTtsPrompt.innerHTML = '<span class="material-symbols-outlined">volume_up</span>';
   }
 });
 
@@ -205,6 +216,7 @@ async function submit() {
     ? 'voice' : 'typed';
 
   inputArea.style.display = 'none';
+  senseiTip.style.display = 'none';
   loadingGrade.style.display = 'block';
 
   try {
@@ -330,6 +342,8 @@ btnNext.addEventListener('click', () => {
   resultCard.className = 'result-card';
   resultCard.style.display = 'none';
   voiceStatus.style.display = 'none';
+  promptHeaderInfo.style.display = 'none';
+  senseiTip.style.display = 'none';
   chatArea.style.display = 'none';
   chat.reset();
   drillResultId = null;
