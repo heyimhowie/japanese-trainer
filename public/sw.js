@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jp-trainer-v3';
+const CACHE_NAME = 'jp-trainer-v4';
 const SHELL_ASSETS = [
   '/css/style.css',
   '/js/shared.js',
@@ -27,6 +27,9 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  // Skip cross-origin requests (Google Fonts, CDNs, etc.)
+  if (!e.request.url.startsWith(self.location.origin)) return;
+
   // Network-first for API calls and HTML pages
   if (e.request.url.includes('/api/') || e.request.mode === 'navigate') {
     e.respondWith(
