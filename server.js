@@ -20,6 +20,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      'font-src': ["'self'", 'https://fonts.gstatic.com'],
       'media-src': ["'self'", 'blob:'],
       'upgrade-insecure-requests': process.env.NODE_ENV === 'production' ? [] : null,
     },
