@@ -10,15 +10,6 @@
         "Your neighbor asks about the dog they saw you walking"
       ]
     },
-    "coaching": {
-      "topics": ["U8 girls basketball", "principles-based coaching", "practice planning", "teaching fundamentals"],
-      "scenarios": [
-        "Another parent at pickup asks if you'd recommend their kid join the team",
-        "A friend asks how last weekend's game went",
-        "Someone asks why you volunteer to coach — you explain what you get out of it",
-        "You're telling another coach about a drill that worked really well at practice"
-      ]
-    },
     "work": {
       "topics": ["IT project manager", "enterprise technology", "SAP S/4HANA", "Fluor Corporation"],
       "scenarios": [
@@ -35,15 +26,6 @@
         "A friend asks what anime you're watching right now and if it's good",
         "Someone asks for advice on how to start learning Japanese",
         "You're explaining to a friend why you watch anime without subtitles now"
-      ]
-    },
-    "technology_ai": {
-      "topics": ["learning about AI", "Claude Code", "building apps", "Bitcoin", "investing"],
-      "scenarios": [
-        "A friend saw a news article about AI and asks you to explain what it actually does",
-        "Someone asks what you built recently — you describe your latest project",
-        "A coworker is curious about Bitcoin — they ask if it's worth investing in",
-        "You're recommending an AI tool to a friend who's never used one"
       ]
     },
     "health_fitness": {
@@ -81,6 +63,42 @@
         "You tried a new restaurant last weekend and want to tell your friend about it",
         "Someone offers you instant coffee — you politely decline and explain your preference",
         "A friend visiting from out of town asks where they should eat"
+      ]
+    },
+    "daily_life": {
+      "topics": ["shopping", "errands", "public transit", "weather", "asking for directions", "daily routine"],
+      "scenarios": [
+        "You're at the grocery store and can't find something — you ask a staff member for help",
+        "A friend asks how you usually get to work — you describe your commute",
+        "It's raining and you forgot your umbrella — you ask a coworker if they have a spare",
+        "You need to mail a package at the post office and ask about shipping options"
+      ]
+    },
+    "entertainment": {
+      "topics": ["movies", "TV shows", "music", "video games", "streaming", "concerts"],
+      "scenarios": [
+        "A friend asks what you've been watching lately — you recommend a show",
+        "Someone asks if you've seen the new movie that just came out",
+        "You're trying to pick something to watch with a friend and can't agree on a genre",
+        "A coworker asks what kind of music you listen to — you explain your taste"
+      ]
+    },
+    "pets": {
+      "topics": ["dogs", "pet care", "walks", "vet visits", "pet personality"],
+      "scenarios": [
+        "A neighbor stops to pet your dog and asks about the breed and age",
+        "You're at the vet and need to describe your dog's symptoms",
+        "A friend is thinking about getting a dog and asks for your advice",
+        "You're explaining why your dog is afraid of fireworks to a friend visiting your house"
+      ]
+    },
+    "holidays_events": {
+      "topics": ["Japanese holidays", "お正月", "お盆", "花見", "birthdays", "gift-giving", "seasonal events"],
+      "scenarios": [
+        "A Japanese friend invites you to a 花見 party — you ask what to bring",
+        "Someone asks how you celebrated New Year's — you compare American and Japanese traditions",
+        "You're shopping for a birthday gift for a friend and ask the store clerk for suggestions",
+        "A coworker explains their お盆 plans — you ask follow-up questions about the customs"
       ]
     }
   }
