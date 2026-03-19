@@ -1,6 +1,6 @@
 // --- State ---
 let currentTier = 1;
-let currentLevel = 'blue';
+let currentLevel = 'white';
 let currentDomain = '';
 let currentDrill = null;
 let drillStartTime = null;
