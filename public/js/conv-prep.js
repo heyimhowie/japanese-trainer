@@ -10,27 +10,40 @@ const loading = document.getElementById('loading');
 const generateArea = document.getElementById('generate-area');
 const output = document.getElementById('output');
 
-const outDomain = document.getElementById('out-domain');
-const outStyle = document.getElementById('out-style');
-const outDifficulty = document.getElementById('out-difficulty');
-const outSummary = document.getElementById('out-summary');
-const outPrompt = document.getElementById('out-prompt');
-const btnCopy = document.getElementById('btn-copy');
-const outVocab = document.getElementById('out-vocab');
-const outPhrases = document.getElementById('out-phrases');
-const outStarters = document.getElementById('out-starters');
-const outTopics = document.getElementById('out-topics');
+// Scenario summary
+const scenarioSummary = document.getElementById('scenario-summary');
+const scenarioTags = document.getElementById('scenario-tags');
+const scenarioTitle = document.getElementById('scenario-title');
+const scenarioText = document.getElementById('scenario-text');
 
+// System prompt
+const systemPromptCard = document.getElementById('system-prompt-card');
+const promptOutput = document.getElementById('prompt-output');
+const btnCopy = document.getElementById('btn-copy');
+
+// Content sections
+const vocabCard = document.getElementById('vocab-card');
+const vocabList = document.getElementById('vocab-list');
+const phrasesCard = document.getElementById('phrases-card');
+const phraseList = document.getElementById('phrase-list');
+const startersCard = document.getElementById('starters-card');
+const starterList = document.getElementById('starter-list');
+const topicsCard = document.getElementById('topics-card');
+const topicsList = document.getElementById('topics-list');
+
+// Save button
 const btnSave = document.getElementById('btn-save');
-const btnSavedToggle = document.getElementById('btn-saved-toggle');
-const savedListCard = document.getElementById('saved-list-card');
-const savedList = document.getElementById('saved-list');
+
+// History toggle
+const btnToggleHistory = document.getElementById('btn-toggle-history');
+const historyContent = document.getElementById('history-content');
+const historyList = document.getElementById('history-list');
 
 let currentResult = null;   // the last generated/loaded result payload
 let currentSavedId = null;  // non-null when viewing a saved entry or just saved
 let savedCount = 0;
-let savedListLoaded = false;
-let savedListOpen = false;
+let historyLoaded = false;
+let historyOpen = false;
 
 // --- Init ---
 async function init() {
@@ -108,88 +121,126 @@ function showResult(result) {
   loading.style.display = 'none';
 
   // Reset save button
-  btnSave.innerHTML = '&#9734;';
+  btnSave.disabled = false;
+  btnSave.innerHTML = '<span class="material-symbols-outlined">star</span>';
   btnSave.classList.remove('saved');
   btnSave.title = 'Save this prep';
   if (currentSavedId) {
-    btnSave.innerHTML = '&#9733;';
+    btnSave.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">star</span>';
     btnSave.classList.add('saved');
     btnSave.title = 'Saved';
   }
 
   // Scenario summary
-  outDomain.textContent = (result.domain || '').replace(/_/g, ' ');
   const styleLabels = {
     casual_chat: 'Casual Chat',
     role_play: 'Role Play',
     debate: 'Debate',
     storytelling: 'Storytelling',
   };
-  outStyle.textContent = styleLabels[result.style] || result.style;
-  outDifficulty.textContent = 'Level ' + (result.difficulty || '?');
-  outSummary.textContent = result.scenario_summary || '';
+  const domain = (result.domain || '').replace(/_/g, ' ');
+  const style = styleLabels[result.style] || result.style;
+  const difficulty = 'Level ' + (result.difficulty || '?');
+
+  scenarioTags.innerHTML = `
+    <span class="domain-tag">${escapeHtml(domain)}</span>
+    <span class="style-tag">${escapeHtml(style)}</span>
+    <span class="difficulty-tag">${escapeHtml(difficulty)}</span>
+  `;
+  scenarioTitle.textContent = result.scenario_summary || '';
+  scenarioText.textContent = result.scenario_description || '';
+  scenarioSummary.style.display = '';
 
   // ChatGPT prompt
-  outPrompt.textContent = result.chatgpt_prompt || '';
-  btnCopy.textContent = 'Copy';
+  promptOutput.textContent = result.chatgpt_prompt || '';
+  btnCopy.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1em;">content_copy</span> Copy Prompt';
   btnCopy.classList.remove('copied');
+  systemPromptCard.style.display = '';
 
   // Vocabulary
-  outVocab.innerHTML = '';
+  vocabList.innerHTML = '';
   if (result.key_vocabulary && result.key_vocabulary.length > 0) {
     for (const v of result.key_vocabulary) {
       const div = document.createElement('div');
       div.className = 'vocab-item';
-      const badge = v.status === 'known'
-        ? '<span class="known-badge">Known</span>'
-        : '<span class="new-badge">New</span>';
+      const isKnown = v.status === 'known';
       div.innerHTML = `
         <div class="vocab-item-header">
-          <span class="word">${escapeHtml(v.word)}</span>
-          <span class="reading">${escapeHtml(v.reading)}</span>
-          ${badge}
+          <div class="vocab-kanji-group">
+            <span class="reading">${escapeHtml(v.reading)}</span>
+            <span class="word">${escapeHtml(v.word)}</span>
+          </div>
+          <span class="${isKnown ? 'known-badge' : 'new-badge'}">${isKnown ? 'Known' : 'New'}</span>
         </div>
         <div class="meaning">${escapeHtml(v.meaning)}</div>
         ${v.example ? `<div class="example">${furiganaToRuby(escapeHtml(v.example))}</div>` : ''}
       `;
-      outVocab.appendChild(div);
+      vocabList.appendChild(div);
     }
+    vocabCard.style.display = '';
+  } else {
+    vocabCard.style.display = 'none';
   }
 
   // Phrases
-  outPhrases.innerHTML = '';
+  phraseList.innerHTML = '';
+  const colors = ['primary', 'secondary', 'tertiary'];
   if (result.useful_phrases && result.useful_phrases.length > 0) {
-    for (const p of result.useful_phrases) {
+    for (let i = 0; i < result.useful_phrases.length; i++) {
+      const p = result.useful_phrases[i];
       const li = document.createElement('li');
       li.className = 'phrase-item';
       li.innerHTML = `
-        <div class="jp">${furiganaToRuby(escapeHtml(p.japanese))}</div>
-        <div class="en">${escapeHtml(p.english)}</div>
-        ${p.note ? `<div class="note">${escapeHtml(p.note)}</div>` : ''}
+        <div class="phrase-bar ${colors[i % 3]}"></div>
+        <div>
+          <div class="jp">${furiganaToRuby(escapeHtml(p.japanese))}</div>
+          <div class="en">${escapeHtml(p.english)}</div>
+          ${p.note ? `<span class="note ${colors[i % 3]}">${escapeHtml(p.note)}</span>` : ''}
+        </div>
       `;
-      outPhrases.appendChild(li);
+      phraseList.appendChild(li);
     }
+    phrasesCard.style.display = '';
+  } else {
+    phrasesCard.style.display = 'none';
   }
 
   // Starters
-  outStarters.innerHTML = '';
+  starterList.innerHTML = '';
   if (result.conversation_starters && result.conversation_starters.length > 0) {
     for (const s of result.conversation_starters) {
       const li = document.createElement('li');
       li.className = 'starter-item';
-      li.innerHTML = furiganaToRuby(escapeHtml(s));
-      outStarters.appendChild(li);
+      // Support both string and object starters
+      if (typeof s === 'string') {
+        li.innerHTML = `<div class="jp">${furiganaToRuby(escapeHtml(s))}</div>`;
+      } else {
+        li.innerHTML = `
+          <div class="jp">${furiganaToRuby(escapeHtml(s.text || s.japanese || ''))}</div>
+          ${s.label ? `<div class="starter-label">${escapeHtml(s.label)}</div>` : ''}
+        `;
+      }
+      starterList.appendChild(li);
     }
+    startersCard.style.display = '';
+  } else {
+    startersCard.style.display = 'none';
   }
 
   // Topics
-  outTopics.innerHTML = '';
+  topicsList.innerHTML = '';
   if (result.topics_to_cover && result.topics_to_cover.length > 0) {
     for (const t of result.topics_to_cover) {
       const li = document.createElement('li');
-      li.textContent = t;
-      outTopics.appendChild(li);
+      li.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--accent)">check_circle</span>
+        <span>${escapeHtml(t)}</span>
+      `;
+      topicsList.appendChild(li);
     }
+    topicsCard.style.display = '';
+  } else {
+    topicsCard.style.display = 'none';
   }
 
   output.style.display = 'block';
@@ -206,21 +257,21 @@ btnSave.addEventListener('click', async () => {
       const res = await fetch('/api/drill/conv-prep-history/' + currentSavedId, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
 
-      // Remove from saved list if open
-      if (savedListOpen) {
-        const li = savedList.querySelector(`[data-id="${currentSavedId}"]`);
+      // Remove from history list if open
+      if (historyOpen) {
+        const li = historyList.querySelector(`[data-id="${currentSavedId}"]`);
         if (li) li.remove();
       } else {
-        savedListLoaded = false;
+        historyLoaded = false;
       }
 
       currentSavedId = null;
-      btnSave.innerHTML = '&#9734;';
+      btnSave.innerHTML = '<span class="material-symbols-outlined">star</span>';
       btnSave.classList.remove('saved');
       btnSave.title = 'Save this prep';
 
       savedCount--;
-      updateSavedToggle();
+      updateHistoryLabel();
     } else {
       // Save: insert into DB
       const { domain, style, difficulty, _customTopic, ...payload } = currentResult;
@@ -242,15 +293,15 @@ btnSave.addEventListener('click', async () => {
       const { id } = await res.json();
 
       currentSavedId = id;
-      btnSave.innerHTML = '&#9733;';
+      btnSave.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">star</span>';
       btnSave.classList.add('saved');
       btnSave.title = 'Saved';
 
       savedCount++;
-      updateSavedToggle();
+      updateHistoryLabel();
 
-      // If saved list is open, prepend the new item
-      if (savedListOpen) {
+      // If history list is open, prepend the new item
+      if (historyOpen) {
         const entry = {
           id,
           created_at: new Date().toISOString(),
@@ -260,9 +311,9 @@ btnSave.addEventListener('click', async () => {
           custom_topic: _customTopic || null,
           scenario_summary: currentResult.scenario_summary || null,
         };
-        savedList.prepend(createSavedItem(entry));
+        historyList.prepend(createHistoryItem(entry));
       } else {
-        savedListLoaded = false;
+        historyLoaded = false;
       }
     }
   } catch (err) {
@@ -272,16 +323,18 @@ btnSave.addEventListener('click', async () => {
   }
 });
 
-// --- Saved toggle button ---
-btnSavedToggle.addEventListener('click', async () => {
-  savedListOpen = !savedListOpen;
-  if (savedListOpen) {
-    savedListCard.style.display = '';
-    if (!savedListLoaded) {
-      await loadSavedList();
+// --- History toggle button ---
+btnToggleHistory.addEventListener('click', async () => {
+  historyOpen = !historyOpen;
+  if (historyOpen) {
+    historyContent.style.display = '';
+    btnToggleHistory.classList.add('expanded');
+    if (!historyLoaded) {
+      await loadHistoryList();
     }
   } else {
-    savedListCard.style.display = 'none';
+    historyContent.style.display = 'none';
+    btnToggleHistory.classList.remove('expanded');
   }
 });
 
@@ -292,36 +345,32 @@ async function fetchSavedCount() {
     if (!res.ok) return;
     const entries = await res.json();
     savedCount = entries.length;
-    updateSavedToggle();
+    updateHistoryLabel();
   } catch (err) {
     console.error('Failed to fetch saved count:', err);
   }
 }
 
-function updateSavedToggle() {
-  if (savedCount > 0) {
-    btnSavedToggle.style.display = '';
-    btnSavedToggle.textContent = `Saved (${savedCount})`;
-  } else {
-    btnSavedToggle.style.display = 'none';
-    savedListCard.style.display = 'none';
-    savedListOpen = false;
+function updateHistoryLabel() {
+  const label = btnToggleHistory.querySelector('.label');
+  if (label) {
+    label.textContent = savedCount > 0 ? `View Prep History (${savedCount})` : 'View Prep History';
   }
 }
 
-// --- Load saved list ---
-async function loadSavedList() {
+// --- Load history list ---
+async function loadHistoryList() {
   try {
     const res = await fetch('/api/drill/conv-prep-history');
     if (!res.ok) return;
     const entries = await res.json();
-    savedList.innerHTML = '';
+    historyList.innerHTML = '';
     for (const entry of entries) {
-      savedList.appendChild(createSavedItem(entry));
+      historyList.appendChild(createHistoryItem(entry));
     }
-    savedListLoaded = true;
+    historyLoaded = true;
   } catch (err) {
-    console.error('Failed to load saved list:', err);
+    console.error('Failed to load history list:', err);
   }
 }
 
@@ -345,7 +394,7 @@ const styleLabelsMap = {
   storytelling: 'Storytelling',
 };
 
-function createSavedItem(entry) {
+function createHistoryItem(entry) {
   const li = document.createElement('li');
   li.className = 'history-item';
   li.dataset.id = entry.id;
@@ -408,10 +457,10 @@ async function deleteSavedEntry(id, li) {
     if (!res.ok) throw new Error('Failed to delete');
     li.remove();
     savedCount--;
-    updateSavedToggle();
+    updateHistoryLabel();
     if (currentSavedId === id) {
       currentSavedId = null;
-      btnSave.innerHTML = '&#9734;';
+      btnSave.innerHTML = '<span class="material-symbols-outlined">star</span>';
       btnSave.classList.remove('saved');
       btnSave.title = 'Save this prep';
     }
@@ -422,15 +471,15 @@ async function deleteSavedEntry(id, li) {
 
 // --- Copy button ---
 btnCopy.addEventListener('click', async () => {
-  const text = outPrompt.textContent;
+  const text = promptOutput.textContent;
   if (!text) return;
 
   try {
     await navigator.clipboard.writeText(text);
-    btnCopy.textContent = 'Copied!';
+    btnCopy.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1em;">check</span> Copied!';
     btnCopy.classList.add('copied');
     setTimeout(() => {
-      btnCopy.textContent = 'Copy';
+      btnCopy.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1em;">content_copy</span> Copy Prompt';
       btnCopy.classList.remove('copied');
     }, 2000);
   } catch (err) {
@@ -443,10 +492,10 @@ btnCopy.addEventListener('click', async () => {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    btnCopy.textContent = 'Copied!';
+    btnCopy.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1em;">check</span> Copied!';
     btnCopy.classList.add('copied');
     setTimeout(() => {
-      btnCopy.textContent = 'Copy';
+      btnCopy.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1em;">content_copy</span> Copy Prompt';
       btnCopy.classList.remove('copied');
     }, 2000);
   }

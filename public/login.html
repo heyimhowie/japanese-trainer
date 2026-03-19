@@ -4,26 +4,96 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Login - Japanese Trainer</title>
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <link rel="stylesheet" href="/css/style.css?v=8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f0f1a">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f9f9fb">
 </head>
 <body>
   <div class="login-container">
-    <div class="login-card">
+
+    <!-- Branding above card -->
+    <div class="login-branding">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined">menu_book</span>
+      </div>
       <h1>Japanese Trainer</h1>
-      <form id="login-form">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required autocomplete="username">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
-        <div id="login-error" class="login-error" style="display:none;"></div>
-        <button type="submit" class="btn btn-primary">Log in</button>
-      </form>
+      <p class="brand-subtitle">Master Japanese through practice</p>
     </div>
+
+    <!-- Login card -->
+    <div class="login-card">
+      <div class="login-greeting">
+        <h2>Welcome Back</h2>
+        <div class="jp-line">
+          <span class="jp">お帰りなさい</span>
+          <span class="romanji">Okaerinasai</span>
+        </div>
+      </div>
+
+      <div id="login-error" class="login-error" style="display:none;"></div>
+
+      <form id="login-form">
+        <!-- Username field -->
+        <div class="field-group">
+          <label for="username">Username</label>
+          <div class="input-with-icon">
+            <span class="input-icon">
+              <span class="material-symbols-outlined">person</span>
+            </span>
+            <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter username">
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="field-group">
+          <div class="field-label-row">
+            <label for="password">Password</label>
+            <a href="#" class="forgot-link">Forgot?</a>
+          </div>
+          <div class="input-with-icon">
+            <span class="input-icon">
+              <span class="material-symbols-outlined">lock</span>
+            </span>
+            <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+          </div>
+        </div>
+
+        <!-- Login button -->
+        <button type="submit" class="btn-login">
+          Log in
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="login-divider">
+        <p>Don't have an account?<a href="#">Sign up</a></p>
+      </div>
+    </div>
+
+    <!-- Footer links -->
+    <div class="login-footer">
+      <button type="button">
+        <span class="material-symbols-outlined">language</span>
+        Language
+      </button>
+      <button type="button">
+        <span class="material-symbols-outlined">shield</span>
+        Privacy
+      </button>
+      <button type="button">
+        <span class="material-symbols-outlined">help</span>
+        Help
+      </button>
+    </div>
+
   </div>
   <script src="/js/login.js"></script>
 </body>

@@ -3,8 +3,8 @@
   "short_name": "JP Trainer",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f1a",
-  "theme_color": "#0f0f1a",
+  "background_color": "#f9f9fb",
+  "theme_color": "#f9f9fb",
   "icons": [
     {
       "src": "/images/icon-192.png",

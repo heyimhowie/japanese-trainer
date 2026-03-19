@@ -25,15 +25,23 @@ const btnVoice = document.getElementById('btn-voice');
 const btnSubmit = document.getElementById('btn-submit');
 const voiceStatus = document.getElementById('voice-status');
 const loadingGrade = document.getElementById('loading-grade');
-const resultCard = document.getElementById('result-card');
-const resultHeader = document.getElementById('result-header');
+const resultArea = document.getElementById('result-area');
+const resultStatusBar = document.getElementById('result-status-bar');
+const resultStatusText = document.getElementById('result-status-text');
 const resultUserResponse = document.getElementById('result-user-response');
 const resultTarget = document.getElementById('result-target');
 const resultCorrections = document.getElementById('result-corrections');
 const resultExplanation = document.getElementById('result-explanation');
 const resultErrors = document.getElementById('result-errors');
+const gaugeGrammar = document.getElementById('gauge-grammar');
+const gaugeMeaning = document.getElementById('gauge-meaning');
+const gaugeNaturalness = document.getElementById('gauge-naturalness');
+const grammarPointSection = document.getElementById('grammar-point-section');
+const grammarPointTitle = document.getElementById('grammar-point-title');
+const grammarPointText = document.getElementById('grammar-point-text');
 const btnTts = document.getElementById('btn-tts');
 const btnNext = document.getElementById('btn-next');
+const nextDrillBar = document.getElementById('next-drill-bar');
 const chatArea = document.getElementById('chat-area');
 
 // --- Hint toggle ---
@@ -92,8 +100,8 @@ async function generate() {
   loadingGenerate.style.display = 'block';
   promptCard.style.display = 'none';
   inputArea.style.display = 'none';
-  resultCard.className = 'result-card';
-  resultCard.style.display = 'none';
+  resultArea.style.display = 'none';
+  nextDrillBar.style.display = 'none';
   chatArea.style.display = 'none';
 
   try {
@@ -237,22 +245,35 @@ async function submit() {
 }
 
 // --- Show result ---
+function updateGauge(gaugeEl, scoreEl, value) {
+  if (value == null) {
+    scoreEl.textContent = '--';
+    gaugeEl.setAttribute('stroke-dasharray', '0, 100');
+    gaugeEl.className.baseVal = 'gauge-fill';
+    return;
+  }
+  scoreEl.textContent = value;
+  gaugeEl.setAttribute('stroke-dasharray', `${value}, 100`);
+  const colorClass = value >= 80 ? 'high' : value >= 60 ? 'mid' : 'low';
+  gaugeEl.className.baseVal = `gauge-fill ${colorClass}`;
+}
+
 function showResult(result) {
   loadingGrade.style.display = 'none';
 
-  // Clear inline display override so CSS class can take effect
-  resultCard.style.display = '';
-  resultCard.className = 'result-card ' + (result.is_correct ? 'correct' : 'incorrect');
+  // Show result area
+  resultArea.style.display = 'block';
 
-  const score = result.score != null ? ` (${result.score}/100)` : '';
-  resultHeader.textContent = result.is_correct
-    ? `Nice work!${score}`
-    : `Keep practicing!${score}`;
+  // Status bar
+  const isCorrect = result.is_correct;
+  resultStatusBar.className = 'result-status-bar ' + (isCorrect ? 'correct' : 'incorrect');
+  resultStatusText.textContent = isCorrect ? '正解 Correct' : '不正解 Incorrect';
+  resultStatusBar.querySelector('.material-symbols-outlined').textContent = isCorrect ? 'check_circle' : 'cancel';
 
-  // Sub-scores
-  setScore('score-grammar', result.grammar_score);
-  setScore('score-meaning', result.meaning_score);
-  setScore('score-naturalness', result.naturalness_score);
+  // SVG gauges
+  updateGauge(gaugeGrammar, document.getElementById('score-grammar'), result.grammar_score);
+  updateGauge(gaugeMeaning, document.getElementById('score-meaning'), result.meaning_score);
+  updateGauge(gaugeNaturalness, document.getElementById('score-naturalness'), result.naturalness_score);
 
   resultUserResponse.textContent = userInput.value.trim();
 
@@ -260,24 +281,42 @@ function showResult(result) {
   const targetText = result.target_japanese || currentDrill.target_japanese;
   resultTarget.innerHTML = furiganaToRuby(escapeHtml(targetText));
 
-  resultExplanation.textContent = result.explanation || '';
-
-  // Corrections with ruby furigana
-  if (result.corrections && !result.is_correct) {
+  // Corrections with ruby furigana (hidden section)
+  if (result.corrections && !isCorrect) {
     resultCorrections.innerHTML = furiganaToRuby(escapeHtml(result.corrections));
     resultCorrections.style.display = 'block';
   } else {
     resultCorrections.style.display = 'none';
   }
 
-  // Errors
+  // Explanation (hidden section, kept for data)
+  resultExplanation.textContent = result.explanation || '';
+
+  // Analysis cards
   resultErrors.innerHTML = '';
   if (result.errors && result.errors.length > 0) {
     for (const err of result.errors) {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="error-type">${escapeHtml(err.type)}</span> ${escapeHtml(err.detail)}`;
-      resultErrors.appendChild(li);
+      const card = document.createElement('div');
+      card.className = 'analysis-card';
+      card.innerHTML = `<span class="error-type">${escapeHtml(err.type)}</span>
+        <div class="error-content">
+          <div class="error-title">${escapeHtml(err.detail)}</div>
+        </div>`;
+      resultErrors.appendChild(card);
     }
+  }
+
+  // Grammar point section
+  if (result.grammar_point) {
+    grammarPointTitle.textContent = result.grammar_point;
+    grammarPointText.textContent = result.grammar_explanation || result.explanation || '';
+    grammarPointSection.style.display = 'block';
+  } else if (result.explanation) {
+    grammarPointTitle.textContent = 'Explanation';
+    grammarPointText.textContent = result.explanation;
+    grammarPointSection.style.display = 'block';
+  } else {
+    grammarPointSection.style.display = 'none';
   }
 
   // Store plain text for TTS
@@ -286,7 +325,8 @@ function showResult(result) {
   // Store grading result for chat context
   lastGradeResult = result;
 
-  // Show chat area and reset conversation
+  // Show next drill bar and chat area
+  nextDrillBar.style.display = 'block';
   chat.reset();
   chatArea.style.display = 'block';
 }
@@ -296,14 +336,14 @@ btnTts.addEventListener('click', async () => {
   const text = btnTts.dataset.text;
   if (!text) return;
   btnTts.disabled = true;
-  btnTts.textContent = '... Loading';
+  btnTts.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.5em; font-variation-settings: \'FILL\' 1;">hourglass_top</span>';
   try {
     await playTts(text);
   } catch (err) {
     console.error('TTS error:', err);
   } finally {
     btnTts.disabled = false;
-    btnTts.innerHTML = '&#x1F50A; Listen';
+    btnTts.innerHTML = '<span class="material-symbols-outlined" style="font-size: 1.5em; font-variation-settings: \'FILL\' 1;">volume_up</span>';
   }
 });
 
@@ -336,8 +376,8 @@ const chat = initChat({
 // --- Next drill ---
 btnNext.addEventListener('click', () => {
   stopTts();
-  resultCard.className = 'result-card';
-  resultCard.style.display = 'none';
+  resultArea.style.display = 'none';
+  nextDrillBar.style.display = 'none';
   voiceStatus.style.display = 'none';
   chatArea.style.display = 'none';
   chat.reset();
