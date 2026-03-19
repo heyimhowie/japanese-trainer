@@ -133,18 +133,12 @@ nav {
   height: calc(80px + env(safe-area-inset-top, 0px));
 }
 nav .logo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 1.15em;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 nav .logo .material-symbols-outlined {
   color: var(--accent);
-  font-size: 1.4em;
+  font-size: 1.6em;
 }
 nav .nav-links {
   display: flex;
@@ -2427,22 +2421,14 @@ ruby rt {
    =================================================================== */
 @media (max-width: 640px) {
   nav {
-    padding: 0 16px;
-    padding-top: env(safe-area-inset-top, 0px);
-    height: calc(56px + env(safe-area-inset-top, 0px));
+    display: none;
   }
   body:has(nav) .container {
-    padding-top: calc(56px + env(safe-area-inset-top, 0px) + 12px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
   }
-  nav .nav-links a {
-    font-size: 0.65em;
-    padding: 5px 8px;
-  }
-  .nav-full { display: none; }
-  .nav-short { display: inline; }
   .container {
     padding: 12px;
-    padding-top: calc(56px + env(safe-area-inset-top, 0px) + 12px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 12px) + 16px);
   }
   .prompt-card {
