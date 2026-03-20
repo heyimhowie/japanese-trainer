@@ -90,12 +90,15 @@ router.get('/dashboard', (req, res) => {
       LIMIT 5
     `).all();
 
-    // Weekly trend (last 7 days)
+    // Weekly trend (last 7 days) — split by drill type
     const weeklyTrend = db.prepare(`
-      SELECT date, drills_completed, drills_correct, accuracy_rate
-      FROM daily_stats
-      WHERE date >= date('now', '-7 days')
-      ORDER BY date ASC
+      SELECT date(timestamp) as date,
+        SUM(CASE WHEN drill_type = 'targeted' OR drill_type IS NULL THEN 1 ELSE 0 END) as targeted,
+        SUM(CASE WHEN drill_type = 'free_production' THEN 1 ELSE 0 END) as free
+      FROM drill_results
+      WHERE date(timestamp) >= date('now', '-7 days')
+      GROUP BY date(timestamp)
+      ORDER BY date(timestamp) ASC
     `).all();
 
     // Total drills all time
