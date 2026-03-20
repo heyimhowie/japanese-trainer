@@ -67,10 +67,60 @@ function findGrammarMatch(db, rawPattern) {
   return null;
 }
 
+// Helper: compute vocab production status based on accuracy rate
+function computeVocabStatus(timesDrilled, timesCorrect) {
+  if (timesDrilled === 0) return 'never_attempted';
+  const rate = timesCorrect / timesDrilled;
+  if (timesCorrect >= 5 && rate >= 0.7) return 'consistently_produced';
+  if (timesCorrect >= 1) return 'produced_once';
+  return 'produced_once'; // attempted but never correct
+}
+
+// Helper: compute grammar production status based on accuracy rate
+function computeGrammarStatus(timesDrilled, timesCorrect) {
+  if (timesDrilled === 0) return 'never_attempted';
+  const rate = timesCorrect / timesDrilled;
+  if (timesCorrect >= 5 && rate >= 0.7) return 'reliable';
+  if (timesCorrect >= 1) return 'sometimes_correct';
+  return 'sometimes_correct'; // attempted but never correct
+}
+
+// Helper: find a vocabulary row by spelling, then reading, then partial match
+function findVocabMatch(db, word) {
+  if (!word) return null;
+  // 1. Exact spelling match
+  let row = db.prepare(
+    'SELECT vid, times_drilled, times_correct, production_status FROM vocabulary_status WHERE spelling = ?'
+  ).get(word);
+  if (row) return row;
+
+  // 2. Exact reading match
+  row = db.prepare(
+    'SELECT vid, times_drilled, times_correct, production_status FROM vocabulary_status WHERE reading = ?'
+  ).get(word);
+  if (row) return row;
+
+  // 3. Partial match — word contains the spelling or vice versa (longest match wins)
+  const candidates = db.prepare(
+    `SELECT vid, spelling, times_drilled, times_correct, production_status FROM vocabulary_status
+     WHERE spelling != '' AND (? LIKE '%' || spelling || '%' OR spelling LIKE '%' || ? || '%')
+     ORDER BY LENGTH(spelling) DESC LIMIT 1`
+  ).get(word, word);
+  if (candidates) return candidates;
+
+  return null;
+}
+
 // Helper: update production tracking for vocab and grammar after grading
-function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
+function updateProductionTracking(db, vocabItems, grammarItems, isCorrect, score) {
   try {
     const now = new Date().toISOString();
+    // Use score >= 50 as a softer "correct enough" threshold for production tracking
+    const counted = (score != null && score >= 50) || isCorrect;
+    let matchedVocab = 0;
+    let missedVocab = 0;
+    let matchedGrammar = 0;
+    let missedGrammar = 0;
 
     // Update vocabulary
     if (Array.isArray(vocabItems) && vocabItems.length > 0) {
@@ -79,20 +129,16 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
           const word = item.spelling || item.word;
           if (!word) continue;
 
-          const row = db.prepare(
-            'SELECT vid, times_drilled, times_correct, production_status FROM vocabulary_status WHERE spelling = ?'
-          ).get(word);
-          if (!row) continue;
+          const row = findVocabMatch(db, word);
+          if (!row) {
+            missedVocab++;
+            continue;
+          }
+          matchedVocab++;
 
           const newDrilled = row.times_drilled + 1;
-          const newCorrect = row.times_correct + (isCorrect ? 1 : 0);
-
-          let newStatus = row.production_status;
-          if (isCorrect && newStatus === 'never_attempted') {
-            newStatus = 'produced_once';
-          } else if (isCorrect && newCorrect >= 3) {
-            newStatus = 'consistently_produced';
-          }
+          const newCorrect = row.times_correct + (counted ? 1 : 0);
+          const newStatus = computeVocabStatus(newDrilled, newCorrect);
 
           db.prepare(
             'UPDATE vocabulary_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE vid = ?'
@@ -110,7 +156,11 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
           if (!pattern) continue;
 
           const grammarId = findGrammarMatch(db, pattern);
-          if (!grammarId) continue;
+          if (!grammarId) {
+            missedGrammar++;
+            continue;
+          }
+          matchedGrammar++;
 
           const row = db.prepare(
             'SELECT times_drilled, times_correct, production_status FROM grammar_status WHERE id = ?'
@@ -118,14 +168,8 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
           if (!row) continue;
 
           const newDrilled = row.times_drilled + 1;
-          const newCorrect = row.times_correct + (isCorrect ? 1 : 0);
-
-          let newStatus = row.production_status;
-          if (isCorrect && newStatus === 'never_attempted') {
-            newStatus = 'sometimes_correct';
-          } else if (isCorrect && newCorrect >= 3) {
-            newStatus = 'reliable';
-          }
+          const newCorrect = row.times_correct + (counted ? 1 : 0);
+          const newStatus = computeGrammarStatus(newDrilled, newCorrect);
 
           db.prepare(
             'UPDATE grammar_status SET times_drilled = ?, times_correct = ?, production_status = ?, last_drilled = ? WHERE id = ?'
@@ -134,6 +178,8 @@ function updateProductionTracking(db, vocabItems, grammarItems, isCorrect) {
       });
       updateGrammar();
     }
+
+    console.log(`[Production] Updated ${matchedVocab} vocab (${missedVocab} unmatched), ${matchedGrammar} grammar (${missedGrammar} unmatched) | scored=${score} counted=${counted}`);
   } catch (err) {
     console.error('Production tracking update error (non-fatal):', err);
   }
@@ -336,7 +382,7 @@ router.post('/submit', async (req, res) => {
       mode === 'typed' ? 1 : 0
     );
 
-    updateProductionTracking(db, vocabulary_used, grammar_used, result.is_correct);
+    updateProductionTracking(db, vocabulary_used, grammar_used, result.is_correct, result.score);
 
     res.json(result);
   } catch (err) {
@@ -521,7 +567,7 @@ router.post('/submit-free', async (req, res) => {
       mode === 'typed' ? 1 : 0
     );
 
-    updateProductionTracking(db, target_vocabulary, target_grammar, result.is_correct);
+    updateProductionTracking(db, target_vocabulary, target_grammar, result.is_correct, result.score);
 
     res.json(result);
   } catch (err) {
