@@ -67,6 +67,348 @@
   --shadow-lg: 0 10px 20px rgba(11, 26, 125, 0.1);
 }
 
+/* ===================================================================
+   Dark Mode — Variable Overrides
+   =================================================================== */
+[data-theme="dark"] {
+  /* Surfaces */
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-alt: #1a2332;
+  --surface-mid: #253344;
+  --surface-high: #334155;
+  --surface-highest: #3f4f63;
+
+  /* Text */
+  --text: #e2e2e4;
+  --text-muted: #c6c5d4;
+  --text-hint: #90909c;
+
+  /* Primary (flipped for dark) */
+  --accent: #bcc2ff;
+  --accent-hover: #9aa5ff;
+  --accent-light: #303c9a;
+  --accent-on-container: #dfe0ff;
+  --accent-fixed: #303c9a;
+  --accent-on-fixed: #dfe0ff;
+
+  /* Secondary (Green) */
+  --success: #7ddc7a;
+  --success-bg: rgba(125, 220, 122, 0.12);
+  --success-container: #005313;
+  --success-on: #7ddc7a;
+
+  /* Error */
+  --error: #ffb4ab;
+  --error-bg: rgba(255, 180, 171, 0.12);
+  --error-container: #93000a;
+  --error-on: #ffdad6;
+
+  /* Warning / Tertiary */
+  --warning: #ffb74d;
+  --warning-bg: rgba(255, 183, 77, 0.12);
+  --tertiary-fixed: #623400;
+  --tertiary-on-fixed: #ffdcc1;
+  --tertiary-container: #ffb74d;
+
+  /* Border */
+  --border: rgba(255, 255, 255, 0.05);
+  --border-solid: #475569;
+
+  /* Shadow */
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ===================================================================
+   Dark Mode — Hardcoded Color Overrides
+   =================================================================== */
+
+/* Japanese text (hardcoded #0f172a → var) */
+[data-theme="dark"] .jp-text-large,
+[data-theme="dark"] .japanese-hero,
+[data-theme="dark"] .model-answer-hero .hero-text {
+  color: var(--text);
+}
+
+/* Nav glassmorphism */
+[data-theme="dark"] nav {
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Stat box hover shadow */
+[data-theme="dark"] .stat-box:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* JP suffix color */
+[data-theme="dark"] .stat-box .value .jp-suffix {
+  color: rgba(188, 194, 255, 0.35);
+}
+
+/* Grammar gauge border */
+[data-theme="dark"] .grammar-gauge {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+/* CTA tertiary border */
+[data-theme="dark"] .cta-hero.cta-tertiary {
+  border-color: rgba(188, 194, 255, 0.08);
+}
+
+/* Prompt card shadow + border */
+[data-theme="dark"] .prompt-card {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Prompt header label */
+[data-theme="dark"] .prompt-header-info .prompt-label {
+  color: rgba(188, 194, 255, 0.5);
+}
+
+/* Input area textarea */
+[data-theme="dark"] .input-area textarea {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+[data-theme="dark"] .input-area textarea:focus {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px rgba(188, 194, 255, 0.25);
+}
+
+/* Floating voice button */
+[data-theme="dark"] .input-area .btn-voice-float {
+  background: rgba(188, 194, 255, 0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .input-area .btn-voice-float::before {
+  background: rgba(188, 194, 255, 0.06);
+}
+
+/* Buttons — keep dark gradient in dark mode, with light text */
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-submit-full,
+[data-theme="dark"] .login-card .btn-login {
+  background: linear-gradient(135deg, #303c9a, #4955b3);
+  color: #dfe0ff;
+}
+[data-theme="dark"] .cta-hero.cta-primary {
+  background: linear-gradient(135deg, #303c9a, #1e293b);
+  color: #dfe0ff;
+}
+[data-theme="dark"] .cta-hero.cta-primary .cta-eyebrow,
+[data-theme="dark"] .cta-hero.cta-primary .cta-desc {
+  color: rgba(223, 224, 255, 0.7);
+}
+
+/* Button shadows */
+[data-theme="dark"] .btn-primary {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .btn-submit-full {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Standalone voice button */
+[data-theme="dark"] .btn-voice {
+  background: rgba(188, 194, 255, 0.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .btn-voice.recording,
+[data-theme="dark"] .input-area .btn-voice-float.recording {
+  background: #303c9a;
+  color: #dfe0ff;
+  animation-name: voice-pulse-dark;
+}
+@keyframes voice-pulse-dark {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(188, 194, 255, 0.3); }
+  50% { box-shadow: 0 0 0 14px rgba(188, 194, 255, 0); }
+}
+
+/* Response box border */
+[data-theme="dark"] .response-section .response-box {
+  border-left-color: rgba(188, 194, 255, 0.2);
+}
+
+/* Model answer hero */
+[data-theme="dark"] .model-answer-hero {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .model-answer-hero .btn-tts-hero {
+  background: #303c9a;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  color: #dfe0ff;
+}
+
+/* Grammar point section */
+[data-theme="dark"] .grammar-point-section {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Analysis card error-type badge */
+[data-theme="dark"] .analysis-card .error-type {
+  background: #303c9a;
+  color: #dfe0ff;
+}
+
+/* Chat card */
+[data-theme="dark"] .chat-card {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .chat-user {
+  background: #303c9a;
+  color: #dfe0ff;
+}
+[data-theme="dark"] .chat-input-row input:focus {
+  box-shadow: 0 0 0 2px rgba(188, 194, 255, 0.25);
+}
+
+/* Controls row focus rings */
+[data-theme="dark"] .controls-row select:focus,
+[data-theme="dark"] .controls-row input[type="text"]:focus {
+  box-shadow: 0 0 0 2px rgba(188, 194, 255, 0.25);
+}
+
+/* Level button active (blue) */
+[data-theme="dark"] .level-btn.blue.active {
+  background: #303c9a;
+  color: #dfe0ff;
+}
+
+/* Tier button active */
+[data-theme="dark"] .tier-btn-group button.active {
+  background: #303c9a;
+  color: #dfe0ff;
+}
+
+/* TTS buttons */
+[data-theme="dark"] .btn-tts {
+  background: #303c9a;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  color: #dfe0ff;
+}
+[data-theme="dark"] .btn-tts-prompt {
+  background: rgba(188, 194, 255, 0.1);
+}
+
+/* Conv Prep — prompt output card stays dark, slightly darker than bg */
+[data-theme="dark"] .prompt-output-card {
+  background: #0b1222;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Vocab items */
+[data-theme="dark"] .vocab-item {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .vocab-item:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .vocab-item .reading {
+  color: rgba(188, 194, 255, 0.5);
+}
+
+/* Phrase note colors */
+[data-theme="dark"] .phrase-item .note.primary {
+  background: rgba(188, 194, 255, 0.12);
+}
+[data-theme="dark"] .phrase-item .note.secondary {
+  background: rgba(125, 220, 122, 0.12);
+}
+[data-theme="dark"] .phrase-item .note.tertiary {
+  color: var(--tertiary-on-fixed);
+  background: rgba(255, 183, 77, 0.12);
+}
+
+/* Starter items */
+[data-theme="dark"] .starter-item {
+  border-color: rgba(188, 194, 255, 0.05);
+}
+
+/* Topics card */
+[data-theme="dark"] .topics-card {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+/* History */
+[data-theme="dark"] .history-toggle {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .history-item {
+  border-color: rgba(255, 255, 255, 0.03);
+}
+[data-theme="dark"] .history-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Login page decorative circles */
+[data-theme="dark"] .login-container::before {
+  background: rgba(188, 194, 255, 0.04);
+}
+[data-theme="dark"] .login-container::after {
+  background: rgba(154, 165, 255, 0.04);
+}
+
+/* Login card */
+[data-theme="dark"] .login-branding .brand-icon {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .login-card {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.03);
+}
+[data-theme="dark"] .login-card input:focus {
+  box-shadow: 0 0 0 2px rgba(188, 194, 255, 0.25);
+}
+[data-theme="dark"] .login-card .btn-login {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .login-card .btn-login:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .login-card .login-divider {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ===================================================================
+   Theme Toggle Button
+   =================================================================== */
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-hint);
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  color: var(--accent);
+  background: var(--surface-mid);
+}
+.theme-toggle .material-symbols-outlined {
+  font-size: 1.3em;
+}
+/* Floating toggle for login page (no nav) */
+.theme-toggle-float {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -226,6 +568,16 @@ body:has(nav) .container {
   }
   .bottom-nav a.active .material-symbols-outlined {
     font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  /* Dark mode bottom nav */
+  [data-theme="dark"] .bottom-nav {
+    background: rgba(15, 23, 42, 0.92);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+  }
+  [data-theme="dark"] .bottom-nav a.active {
+    background: rgba(188, 194, 255, 0.1);
   }
 }
 
