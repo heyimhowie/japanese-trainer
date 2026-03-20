@@ -693,58 +693,48 @@ body:has(nav) .container {
   border-radius: 50%;
 }
 .legend-dot.drills { background: var(--accent); }
+.legend-dot.free { background: var(--success); }
 .trend-chart {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  height: 120px;
-  gap: 8px;
-}
-.trend-day {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.trend-bar-wrap {
   width: 100%;
-  height: 100px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  position: relative;
 }
-.trend-bar {
-  width: 70%;
-  max-width: 32px;
-  border-radius: 4px 4px 0 0;
-  background: var(--accent);
-  opacity: 0.5;
-  transition: height 0.5s ease, opacity 0.2s;
+.trend-svg {
+  width: 100%;
+  height: auto;
 }
-.trend-day.today .trend-bar {
-  opacity: 1;
+.trend-grid {
+  stroke: var(--surface-highest);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
 }
-.trend-day:hover .trend-bar { opacity: 0.85; }
-.trend-count {
-  font-size: 0.6em;
-  font-weight: 700;
-  color: var(--text-hint);
-  margin-bottom: 2px;
+.trend-line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.trend-label {
+.trend-line.drills { stroke: var(--accent); }
+.trend-line.free { stroke: var(--success); }
+.trend-dot.drills { fill: var(--accent); }
+.trend-dot.free { fill: var(--success); }
+.trend-val {
   font-family: 'Inter', sans-serif;
-  font-size: 0.6em;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+.trend-val.drills { fill: var(--accent); }
+.trend-val.free { fill: var(--success); }
+.trend-day-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-hint);
+  fill: var(--text-hint);
+  text-anchor: middle;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.trend-day.today .trend-label {
-  color: var(--accent);
+.trend-day-label.today {
+  fill: var(--accent);
   font-weight: 700;
 }
 

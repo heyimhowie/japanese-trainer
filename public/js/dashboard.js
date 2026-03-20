@@ -91,20 +91,20 @@ async function loadDashboard() {
 }
 
 /**
- * Render 7-day weekly trend bar chart.
+ * Render 7-day weekly trend as a dual-line SVG chart (Drills + Free).
  */
 function renderWeeklyTrend(trend) {
-  const chart = document.getElementById('trend-chart');
+  var chart = document.getElementById('trend-chart');
   if (!chart) return;
 
   // Build full 7-day range
-  const days = [];
-  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var days = [];
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   for (var i = 6; i >= 0; i--) {
     var d = new Date();
     d.setDate(d.getDate() - i);
     var dateStr = d.toISOString().split('T')[0];
-    days.push({ date: dateStr, label: dayNames[d.getDay()], drills: 0, accuracy: 0 });
+    days.push({ date: dateStr, label: dayNames[d.getDay()], targeted: 0, free: 0 });
   }
 
   // Merge API data
@@ -114,25 +114,71 @@ function renderWeeklyTrend(trend) {
   }
   for (var day of days) {
     if (trendMap[day.date]) {
-      day.drills = trendMap[day.date].drills_completed;
-      day.accuracy = Math.round((trendMap[day.date].accuracy_rate || 0) * 100);
+      day.targeted = trendMap[day.date].targeted || 0;
+      day.free = trendMap[day.date].free || 0;
     }
   }
 
-  var maxDrills = Math.max.apply(null, days.map(function(d) { return d.drills; }).concat([1]));
+  var allVals = days.map(function(d) { return d.targeted; })
+    .concat(days.map(function(d) { return d.free; }));
+  var maxVal = Math.max.apply(null, allVals.concat([1]));
+
+  // SVG dimensions
+  var W = 500, H = 100;
+  var padX = 36; // space for day labels on each side
+  var padTop = 8, padBot = 0;
+  var plotW = W - padX * 2;
+  var plotH = H - padTop - padBot;
+  var step = plotW / 6; // 7 points, 6 gaps
+
+  function yPos(val) {
+    return padTop + plotH - (val / maxVal) * plotH;
+  }
+
+  // Build polyline points
+  var drillPts = [];
+  var freePts = [];
+  for (var j = 0; j < 7; j++) {
+    var x = padX + j * step;
+    drillPts.push(x + ',' + yPos(days[j].targeted));
+    freePts.push(x + ',' + yPos(days[j].free));
+  }
+
   var todayStr = new Date().toISOString().split('T')[0];
 
-  chart.innerHTML = days.map(function(day) {
-    var barH = Math.max((day.drills / maxDrills) * 100, day.drills > 0 ? 8 : 0);
-    var isToday = day.date === todayStr;
-    return '<div class="trend-day' + (isToday ? ' today' : '') + '">' +
-      '<div class="trend-bar-wrap">' +
-        '<div class="trend-bar" style="height:' + barH + '%" title="' + day.drills + ' drills, ' + day.accuracy + '% accuracy"></div>' +
-        (day.drills > 0 ? '<div class="trend-count">' + day.drills + '</div>' : '') +
-      '</div>' +
-      '<div class="trend-label">' + day.label + '</div>' +
-    '</div>';
-  }).join('');
+  // Build SVG
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + (H + 24) + '" class="trend-svg">';
+
+  // Horizontal grid lines
+  for (var g = 0; g <= 3; g++) {
+    var gy = padTop + (plotH / 3) * g;
+    svg += '<line x1="' + padX + '" y1="' + gy + '" x2="' + (W - padX) + '" y2="' + gy + '" class="trend-grid"/>';
+  }
+
+  // Lines
+  svg += '<polyline points="' + drillPts.join(' ') + '" class="trend-line drills" />';
+  svg += '<polyline points="' + freePts.join(' ') + '" class="trend-line free" />';
+
+  // Dots + labels
+  for (var k = 0; k < 7; k++) {
+    var cx = padX + k * step;
+    var isToday = days[k].date === todayStr;
+    // Drill dots
+    if (days[k].targeted > 0) {
+      svg += '<circle cx="' + cx + '" cy="' + yPos(days[k].targeted) + '" r="3.5" class="trend-dot drills"/>';
+      svg += '<text x="' + cx + '" y="' + (yPos(days[k].targeted) - 8) + '" class="trend-val drills">' + days[k].targeted + '</text>';
+    }
+    // Free dots
+    if (days[k].free > 0) {
+      svg += '<circle cx="' + cx + '" cy="' + yPos(days[k].free) + '" r="3.5" class="trend-dot free"/>';
+      svg += '<text x="' + cx + '" y="' + (yPos(days[k].free) - 8) + '" class="trend-val free">' + days[k].free + '</text>';
+    }
+    // Day labels
+    svg += '<text x="' + cx + '" y="' + (H + 16) + '" class="trend-day-label' + (isToday ? ' today' : '') + '">' + days[k].label + '</text>';
+  }
+
+  svg += '</svg>';
+  chart.innerHTML = svg;
 }
 
 /**
