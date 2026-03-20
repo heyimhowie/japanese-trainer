@@ -779,23 +779,40 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
   }
 });
 
-// POST /api/drill/tts — text-to-speech via OpenAI
+// POST /api/drill/tts — text-to-speech via ElevenLabs
 router.post('/tts', async (req, res) => {
   try {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'No text provided' });
 
-    const OpenAI = require('openai');
-    const openai = new OpenAI();
+    const voiceId = 'xqBHosABMzganqASczvS';
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        method: 'POST',
+        headers: {
+          'xi-api-key': process.env.ELEVENLABS_API_KEY,
+          'Content-Type': 'application/json',
+          'Accept': 'audio/mpeg',
+        },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        }),
+      }
+    );
 
-    const audio = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: 'nova',
-      input: text,
-      speed: 1.0,
-    });
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error('ElevenLabs error:', response.status, errBody);
+      return res.status(502).json({ error: 'TTS service error' });
+    }
 
-    const buffer = Buffer.from(await audio.arrayBuffer());
+    const buffer = Buffer.from(await response.arrayBuffer());
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': buffer.length,
