@@ -72,6 +72,15 @@ router.get('/dashboard', (req, res) => {
       FROM grammar_status
     `).get();
 
+    // Grammar level breakdown
+    const grammarLevels = db.prepare(`
+      SELECT bunpro_level, COUNT(*) as count,
+        SUM(CASE WHEN production_status IN ('sometimes_correct', 'reliable') THEN 1 ELSE 0 END) as reliable
+      FROM grammar_status
+      WHERE bunpro_level IS NOT NULL
+      GROUP BY bunpro_level
+    `).all();
+
     // Weakest grammar patterns (highest error rate among drilled patterns)
     const weakestPatterns = db.prepare(`
       SELECT pattern_name, bunpro_level, bunpro_accuracy, error_count, times_drilled, times_correct
@@ -116,7 +125,7 @@ router.get('/dashboard', (req, res) => {
       free_today: freeToday,
       targeted_today: targetedToday,
       vocabulary: { ...vocabCounts, tiers: tierCounts },
-      grammar: grammarCounts,
+      grammar: { ...grammarCounts, levels: grammarLevels },
       weakest_patterns: weakestPatterns,
       weekly_trend: weeklyTrend,
       total_drills: totalDrills.count,

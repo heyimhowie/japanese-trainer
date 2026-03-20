@@ -54,6 +54,19 @@
       </div>
     </div>
 
+    <!-- Weekly Trend -->
+    <div class="trend-card">
+      <div class="trend-header">
+        <h3>This Week</h3>
+        <span class="trend-legend">
+          <span class="legend-dot drills"></span> Drills
+        </span>
+      </div>
+      <div class="trend-chart" id="trend-chart">
+        <!-- JS populates 7 bar groups -->
+      </div>
+    </div>
+
     <!-- Insights Grid -->
     <div class="insights-grid">
       <!-- LEFT Column -->
@@ -92,6 +105,10 @@
                 <span class="stat-label">Reliable</span>
                 <span class="stat-value success" id="grammar-reliable">--</span>
               </div>
+            </div>
+            <!-- Level Breakdown -->
+            <div class="grammar-levels" id="grammar-levels">
+              <!-- JS populates: master, expert, seasoned, adept, beginner rows -->
             </div>
             <div class="grammar-gauge">
               <div class="gauge-container">

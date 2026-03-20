@@ -16,9 +16,9 @@ async function loadDashboard() {
     const free = data.free_today || { completed: 0, correct: 0 };
     setStatValue('free-completed', free.completed || 0);
     const freeAcc = free.completed > 0
-      ? Math.round((free.correct / free.completed) * 100)
-      : 0;
-    document.getElementById('free-accuracy').textContent = freeAcc + '%';
+      ? Math.round((free.correct / free.completed) * 100) + '%'
+      : '--';
+    document.getElementById('free-accuracy').textContent = freeAcc;
 
     // Targeted drill stats
     const targeted = data.targeted_today || { completed: 0, correct: 0 };
@@ -58,6 +58,12 @@ async function loadDashboard() {
     const filled = (masteryPct / 100) * circumference;
     document.getElementById('grammar-gauge-circle').setAttribute('stroke-dasharray', filled + ' ' + circumference);
 
+    // Grammar level breakdown
+    renderGrammarLevels(data.grammar.levels);
+
+    // Weekly trend chart
+    renderWeeklyTrend(data.weekly_trend);
+
     // Weakest patterns
     const list = document.getElementById('weakness-list');
     list.innerHTML = '';
@@ -82,6 +88,73 @@ async function loadDashboard() {
   } catch (err) {
     console.error('Failed to load dashboard:', err);
   }
+}
+
+/**
+ * Render 7-day weekly trend bar chart.
+ */
+function renderWeeklyTrend(trend) {
+  const chart = document.getElementById('trend-chart');
+  if (!chart) return;
+
+  // Build full 7-day range
+  const days = [];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var dateStr = d.toISOString().split('T')[0];
+    days.push({ date: dateStr, label: dayNames[d.getDay()], drills: 0, accuracy: 0 });
+  }
+
+  // Merge API data
+  var trendMap = {};
+  if (trend) {
+    for (var t of trend) trendMap[t.date] = t;
+  }
+  for (var day of days) {
+    if (trendMap[day.date]) {
+      day.drills = trendMap[day.date].drills_completed;
+      day.accuracy = Math.round((trendMap[day.date].accuracy_rate || 0) * 100);
+    }
+  }
+
+  var maxDrills = Math.max.apply(null, days.map(function(d) { return d.drills; }).concat([1]));
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  chart.innerHTML = days.map(function(day) {
+    var barH = Math.max((day.drills / maxDrills) * 100, day.drills > 0 ? 8 : 0);
+    var isToday = day.date === todayStr;
+    return '<div class="trend-day' + (isToday ? ' today' : '') + '">' +
+      '<div class="trend-bar-wrap">' +
+        '<div class="trend-bar" style="height:' + barH + '%" title="' + day.drills + ' drills, ' + day.accuracy + '% accuracy"></div>' +
+        (day.drills > 0 ? '<div class="trend-count">' + day.drills + '</div>' : '') +
+      '</div>' +
+      '<div class="trend-label">' + day.label + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+/**
+ * Render grammar level breakdown rows.
+ */
+function renderGrammarLevels(levels) {
+  var container = document.getElementById('grammar-levels');
+  if (!container || !levels) return;
+
+  var order = ['master', 'expert', 'seasoned', 'adept', 'beginner'];
+  var levelMap = {};
+  for (var l of levels) levelMap[l.bunpro_level] = l;
+
+  container.innerHTML = order
+    .filter(function(name) { return levelMap[name]; })
+    .map(function(name) {
+      var l = levelMap[name];
+      return '<div class="grammar-level-row">' +
+        '<span class="level-name">' + name + '</span>' +
+        '<span class="level-count">' + (l.reliable || 0) + '/' + l.count + '</span>' +
+      '</div>';
+    }).join('');
 }
 
 /**
