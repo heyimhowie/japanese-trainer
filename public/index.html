@@ -14,6 +14,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#f9f9fb">
+  <script src="/js/theme.js"></script>
 </head>
 <body>
   <nav>
@@ -24,9 +25,11 @@
       <a href="/" class="active"><span class="nav-full">Dashboard</span><span class="nav-short">Home</span></a>
       <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Drills</span></a>
       <a href="/free.html"><span class="nav-full">Free Production</span><span class="nav-short">Free</span></a>
-      <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Drills</span></a>
       <a href="/conv-prep.html"><span class="nav-full">Conv Prep</span><span class="nav-short">Prep</span></a>
     </div>
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+      <span class="material-symbols-outlined">dark_mode</span>
+    </button>
   </nav>
 
   <div class="container wide">
@@ -154,13 +157,13 @@
       <span class="material-symbols-outlined">dashboard</span>
       Dashboard
     </a>
-    <a href="/free.html">
-      <span class="material-symbols-outlined">edit_note</span>
-      Free
-    </a>
     <a href="/drill.html">
       <span class="material-symbols-outlined">fitness_center</span>
       Drills
+    </a>
+    <a href="/free.html">
+      <span class="material-symbols-outlined">edit_note</span>
+      Free
     </a>
     <a href="/conv-prep.html">
       <span class="material-symbols-outlined">forum</span>
