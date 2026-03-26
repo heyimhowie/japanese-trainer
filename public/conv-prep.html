@@ -86,9 +86,15 @@
           <h2 class="scenario-title" id="scenario-title"></h2>
           <p class="summary-text" id="scenario-text"></p>
         </div>
-        <button class="btn-save" id="btn-save" disabled>
-          <span class="material-symbols-outlined">star</span>
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+          <button class="btn-save" id="btn-save" disabled>
+            <span class="material-symbols-outlined">star</span>
+          </button>
+          <button class="btn-skip" id="btn-skip" title="Skip to new prep">
+            Skip
+            <span class="material-symbols-outlined">skip_next</span>
+          </button>
+        </div>
       </div>
 
       <!-- ChatGPT System Prompt -->

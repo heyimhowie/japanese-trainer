@@ -1331,6 +1331,32 @@ ruby rt {
 /* ===================================================================
    Buttons
    =================================================================== */
+.btn-skip {
+  background: none;
+  border: 1px solid var(--surface-high);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.btn-skip:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.btn-skip:active {
+  transform: scale(0.97);
+}
+.btn-skip .material-symbols-outlined {
+  font-size: 1.1em;
+}
+
 .btn-row {
   display: flex;
   gap: 12px;

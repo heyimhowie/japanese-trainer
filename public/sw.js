@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jp-trainer-v6';
+const CACHE_NAME = 'jp-trainer-v7';
 const SHELL_ASSETS = [
   '/css/style.css',
   '/js/shared.js',

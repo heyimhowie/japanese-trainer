@@ -70,7 +70,9 @@ difficultySlider.addEventListener('input', () => {
   difficultyValue.textContent = difficultySlider.value;
 });
 
-// --- Generate ---
+// --- Skip / Generate ---
+const btnSkip = document.getElementById('btn-skip');
+btnSkip.addEventListener('click', generate);
 btnGenerate.addEventListener('click', generate);
 btnAnother.addEventListener('click', generate);
 
