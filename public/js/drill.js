@@ -92,6 +92,16 @@ domainSelect.addEventListener('change', () => {
   currentDomain = domainSelect.value;
 });
 
+// --- Skip ---
+const btnSkip = document.getElementById('btn-skip');
+btnSkip.addEventListener('click', () => {
+  stopTts();
+  inputArea.style.display = 'none';
+  voiceStatus.style.display = 'none';
+  currentDrill = null;
+  generate();
+});
+
 // --- Generate drill ---
 btnGenerate.addEventListener('click', generate);
 

@@ -99,6 +99,17 @@ const chat = initChat({
   },
 });
 
+// --- Skip ---
+const btnSkip = document.getElementById('btn-skip');
+btnSkip.addEventListener('click', () => {
+  stopTts();
+  inputArea.style.display = 'none';
+  voiceStatus.style.display = 'none';
+  senseiTip.style.display = 'none';
+  currentDrill = null;
+  generate();
+});
+
 // --- Generate ---
 btnGenerate.addEventListener('click', generate);
 

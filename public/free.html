@@ -81,7 +81,13 @@
         <button class="btn-voice-float" id="btn-voice"><span id="mic-icon" class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mic</span></button>
       </div>
 
-      <button class="btn-submit-full" id="btn-submit" disabled>Submit Answer <span class="material-symbols-outlined" style="font-size:1em">arrow_forward</span></button>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn-submit-full" id="btn-submit" disabled style="flex: 1;">Submit Answer <span class="material-symbols-outlined" style="font-size:1em">arrow_forward</span></button>
+        <button class="btn-skip" id="btn-skip" title="Skip this prompt">
+          Skip
+          <span class="material-symbols-outlined">skip_next</span>
+        </button>
+      </div>
 
       <div id="voice-status" style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 12px; display: none;"></div>
     </div>
