@@ -1435,6 +1435,22 @@ ruby rt {
 }
 
 /* ===================================================================
+   Result Card — Animations
+   =================================================================== */
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.result-animate {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+/* ===================================================================
    Result Card — Status Bar + SVG Gauges
    =================================================================== */
 .result-status-bar {
@@ -1449,6 +1465,7 @@ ruby rt {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
   font-size: 1.1em;
+  animation: slideInDown 0.35s ease-out;
 }
 .result-status-bar.correct {
   background: var(--success-container);
@@ -1471,6 +1488,7 @@ ruby rt {
 .result-card.correct,
 .result-card.incorrect {
   display: block;
+  animation: fadeInUp 0.35s ease-out;
 }
 
 /* SVG Score Gauges */

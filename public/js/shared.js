@@ -27,11 +27,21 @@ function escapeHtml(text) {
 }
 
 function setScore(elementId, value) {
-  const el = document.getElementById(elementId);
+  var el = document.getElementById(elementId);
   if (!el) return;
   if (value == null) { el.textContent = '--'; el.className = 'score-value'; return; }
-  el.textContent = value;
   el.className = 'score-value ' + (value >= 80 ? 'high' : value >= 50 ? 'mid' : 'low');
+  animateNumber(el, 0, value, 500);
+}
+
+function animateNumber(el, from, to, duration) {
+  var start = performance.now();
+  function tick(now) {
+    var t = Math.min((now - start) / duration, 1);
+    el.textContent = Math.round(from + (to - from) * t);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // --- TTS playback ---

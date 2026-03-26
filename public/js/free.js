@@ -112,6 +112,11 @@ async function generate() {
   resultCard.className = 'result-card';
   resultCard.style.display = 'none';
   chatArea.style.display = 'none';
+  // Clean up animation classes from previous result
+  resultCard.querySelectorAll('.result-animate').forEach(function(el) {
+    el.classList.remove('result-animate');
+    el.style.animationDelay = '';
+  });
 
   try {
     const res = await fetch('/api/drill/generate-free', {
@@ -334,6 +339,13 @@ function showResult(result) {
   // Show chat area and reset
   chat.reset();
   chatArea.style.display = 'block';
+
+  // Stagger entrance animations
+  var animSections = resultCard.querySelectorAll('.score-breakdown, .target, .what-was-good, .explanation, .alternatives, .vocab-opps');
+  animSections.forEach(function(el, i) {
+    el.classList.add('result-animate');
+    el.style.animationDelay = (0.1 + i * 0.08) + 's';
+  });
 }
 
 // --- Next prompt ---

@@ -103,6 +103,11 @@ async function generate() {
   resultArea.style.display = 'none';
   nextDrillBar.style.display = 'none';
   chatArea.style.display = 'none';
+  // Clean up animation classes from previous result
+  resultArea.querySelectorAll('.result-animate').forEach(function(el) {
+    el.classList.remove('result-animate');
+    el.style.animationDelay = '';
+  });
 
   try {
     const res = await fetch('/api/drill/generate', {
@@ -252,10 +257,17 @@ function updateGauge(gaugeEl, scoreEl, value) {
     gaugeEl.className.baseVal = 'gauge-fill';
     return;
   }
-  scoreEl.textContent = value;
-  gaugeEl.setAttribute('stroke-dasharray', `${value}, 100`);
+  // Start at zero so CSS transition kicks in
+  gaugeEl.setAttribute('stroke-dasharray', '0, 100');
   const colorClass = value >= 80 ? 'high' : value >= 60 ? 'mid' : 'low';
   gaugeEl.className.baseVal = `gauge-fill ${colorClass}`;
+  scoreEl.textContent = '0';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      gaugeEl.setAttribute('stroke-dasharray', `${value}, 100`);
+      animateNumber(scoreEl, 0, value, 600);
+    });
+  });
 }
 
 function showResult(result) {
@@ -329,6 +341,13 @@ function showResult(result) {
   nextDrillBar.style.display = 'block';
   chat.reset();
   chatArea.style.display = 'block';
+
+  // Stagger entrance animations
+  var animSections = resultArea.querySelectorAll('.score-gauges, .model-answer-hero, .analysis-section, .grammar-point-section');
+  animSections.forEach(function(el, i) {
+    el.classList.add('result-animate');
+    el.style.animationDelay = (0.1 + i * 0.08) + 's';
+  });
 }
 
 // --- TTS via OpenAI ---
