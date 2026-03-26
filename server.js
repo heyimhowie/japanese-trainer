@@ -51,7 +51,8 @@ app.use((req, res, next) => {
   if (req.path === '/login.html' || req.path.startsWith('/css/') || req.path.startsWith('/js/') || req.path.startsWith('/images/')) {
     return next();
   }
-  // For HTML page requests, require auth
+  // For HTML page requests, require auth (skip in dev)
+  if (process.env.NODE_ENV !== 'production') return next();
   const isPageRequest = req.path === '/' || req.path.endsWith('.html');
   if (isPageRequest && (!req.session || !req.session.authenticated)) {
     return res.redirect('/login.html');
@@ -100,6 +101,7 @@ app.post('/logout', (req, res) => {
 // --- Auth middleware for all API routes ---
 
 function requireAuth(req, res, next) {
+  if (process.env.NODE_ENV !== 'production') return next();
   if (req.session && req.session.authenticated) {
     return next();
   }
