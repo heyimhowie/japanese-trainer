@@ -147,7 +147,7 @@ function renderWeeklyTrend(trend) {
   var todayStr = new Date().toISOString().split('T')[0];
 
   // Build SVG
-  var svg = '<svg viewBox="0 0 ' + W + ' ' + (H + 24) + '" class="trend-svg">';
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + (H + 24) + '" width="' + W + '" height="' + (H + 24) + '" class="trend-svg">';
 
   // Horizontal grid lines
   for (var g = 0; g <= 3; g++) {
