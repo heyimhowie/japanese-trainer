@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>History - Japanese Trainer</title>
+  <link rel="stylesheet" href="/css/style.css?v=8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f9f9fb">
+  <script src="/js/theme.js"></script>
+</head>
+<body>
+  <nav>
+    <span class="logo">
+      <span class="material-symbols-outlined">menu_book</span>
+    </span>
+    <div class="nav-links">
+      <a href="/"><span class="nav-full">Dashboard</span><span class="nav-short">Home</span></a>
+      <a href="/drill.html"><span class="nav-full">Targeted Drills</span><span class="nav-short">Drills</span></a>
+      <a href="/free.html"><span class="nav-full">Free Production</span><span class="nav-short">Free</span></a>
+      <a href="/conv-prep.html"><span class="nav-full">Conv Prep</span><span class="nav-short">Prep</span></a>
+      <a href="/history.html" class="active"><span class="nav-full">History</span><span class="nav-short">History</span></a>
+    </div>
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+      <span class="material-symbols-outlined">dark_mode</span>
+    </button>
+  </nav>
+
+  <div class="container">
+    <!-- Filters -->
+    <div class="history-filters card">
+      <div class="controls-row">
+        <select id="filter-type">
+          <option value="all">All Types</option>
+          <option value="targeted">Targeted Drills</option>
+          <option value="free">Free Production</option>
+        </select>
+        <select id="filter-domain">
+          <option value="">All Domains</option>
+        </select>
+      </div>
+      <div class="controls-row" style="margin-top: 8px;">
+        <input type="date" id="filter-from" style="flex: 1;">
+        <span class="date-separator">to</span>
+        <input type="date" id="filter-to" style="flex: 1;">
+      </div>
+    </div>
+
+    <!-- Results -->
+    <ul class="history-list drill-history-list" id="results-list"></ul>
+
+    <!-- Load More -->
+    <div class="load-more-area" id="load-more-area" style="display: none;">
+      <button class="btn btn-secondary" id="btn-load-more">Load More</button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="empty-state" style="display: none;">
+      <span class="material-symbols-outlined">history</span>
+      <p>No drill results yet. Start practicing!</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading" style="display: none;">
+      <div class="spinner"></div>
+      <div>Loading history...</div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav (Mobile) -->
+  <div class="bottom-nav">
+    <a href="/">
+      <span class="material-symbols-outlined">dashboard</span>
+      Dashboard
+    </a>
+    <a href="/drill.html">
+      <span class="material-symbols-outlined">fitness_center</span>
+      Drills
+    </a>
+    <a href="/free.html">
+      <span class="material-symbols-outlined">edit_note</span>
+      Free
+    </a>
+    <a href="/conv-prep.html">
+      <span class="material-symbols-outlined">forum</span>
+      Prep
+    </a>
+    <a href="/history.html" class="active">
+      <span class="material-symbols-outlined">history</span>
+      History
+    </a>
+  </div>
+
+  <script src="/js/shared.js"></script>
+  <script src="/js/history.js"></script>
+</body>
+</html>

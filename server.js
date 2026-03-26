@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const drillRoutes = require('./routes/drill');
 const statsRoutes = require('./routes/stats');
+const historyRoutes = require('./routes/history');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -118,6 +119,7 @@ app.use('/api/', requireAuth, apiLimiter);
 
 app.use('/api/drill', drillRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/history', historyRoutes);
 
 // Auto-seed if database is empty (first deploy)
 const { getDb } = require('./db/index');
